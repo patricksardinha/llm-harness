@@ -3,25 +3,48 @@ from dotenv import load_dotenv
 import asyncio
 import time
 import httpx
+import random
 
 load_dotenv()
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
-async def call_llm(n: int, client: httpx.AsyncClient, inputs: list[str]) -> str:
-    debut_simple_call = time.perf_counter()    
-    r = await client.post(
-        "https://generativelanguage.googleapis.com/v1beta/interactions",
-        json={"model": "gemini-3.6-flash", "input": f"{inputs[n]}"}
-    )
-    print(f"{time.perf_counter() - debut_simple_call:.1f}s")
+async def call_llm_with_retry(n: int, client: httpx.AsyncClient, inputs: list[str], max_tentatives: int = 3) -> str:
+    for tentative in range(1, max_tentatives + 1):
+        retry_after = None
+        print(f"Tentatives : {tentative}/{max_tentatives}")
+        try:   
+            debut_simple_call = time.perf_counter() 
+            r = await client.post(
+                "https://generativelanguage.googleapis.com/v1beta/interactions",
+                json={"model": "gemini-3.6-flash", "input": f"{inputs[n]}"}
+            )
+            print(f"Temps une requête: {time.perf_counter() - debut_simple_call:.1f}s")
 
-    if r.status_code != 200:
-        print(r.status_code, r.text)
-        return f"ERREUR {r.status_code}"
+        except (httpx.RequestError) as e:
+            print(f"Erreur réseau : {type(e).__name__}")
+
+        else:
+            # Pas d'erreur
+            if r.status_code == 200:
+                donnees = r.json()
+                return donnees["steps"][1]["content"][0]["text"]
+            
+            # Erreur def
+            if (r.status_code in (400, 401, 403, 404)):
+                return f"Erreur def : {r.status_code}"
+            
+            # Erreur temp
+            retry_after = r.headers.get("retry-after")
+            print(f"Erreur temp : {r.status_code}")
+
+        # point d'attente unique
+        if tentative < max_tentatives:
+            delai = float(retry_after) if retry_after else random.uniform(1, 1+(2 ** (tentative - 1)))
+            print(f"Wainting {delai}[s]")
+            await asyncio.sleep(delai)
+
+    return f"Echec après {max_tentatives} tentatives"
     
-    donnees = r.json()
-    texte = donnees["steps"][1]["content"][0]["text"]
-    return texte
 
 async def main():
     nb_call = 10
@@ -42,10 +65,10 @@ async def main():
 
     async def borne(n: int, client: httpx.AsyncClient) -> str:                       
         async with sem:      
-            return await call_llm(n, client, inputs)
+            return await call_llm_with_retry(n, client, inputs)
 
     async with httpx.AsyncClient(
-        timeout=300,
+        timeout=0.001,
         headers={"x-goog-api-key": GEMINI_API_KEY}
     ) as client:
         resultats = await asyncio.gather(*[borne(i, client) for i in range(nb_call)])

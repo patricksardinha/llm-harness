@@ -1,15 +1,35 @@
 import os
-from dotenv import load_dotenv
 import asyncio
 import time
 import httpx
 import random
+import json
+
+from dotenv import load_dotenv
+
+from dataclasses import dataclass
 
 load_dotenv()
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
+@dataclass
+class ModelInfo:
+    name: str
+    pricing_in: float
+    pricing_out: float
+
+@dataclass
+class Call:
+    text: str = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cost_usd: float = 0
+    latency_ms: float = 0
+    attempts: int = 0
+    error: str = None
+
 class LLMClient:
-    def __init__(self, model: str, api_key: str = GEMINI_API_KEY, concurrency: int = 3, max_tentative: int = 3):
+    def __init__(self, model: ModelInfo, api_key: str = GEMINI_API_KEY, concurrency: int = 3, max_tentative: int = 3):
         self.model = model
         self.api_key = api_key
         self._sem = asyncio.Semaphore(concurrency)
@@ -27,18 +47,17 @@ class LLMClient:
         # fermer les ressources
         await self._http.aclose()
 
-    async def complete(self, prompt: str) -> str:
+    async def complete(self, prompt: str) -> Call:
         async with self._sem:      
+            start_timer = time.perf_counter() 
             for tentative in range(1, self.max_tentative + 1):
                 retry_after = None
                 print(f"Tentatives : {tentative}/{self.max_tentative}")
                 try:   
-                    debut_simple_call = time.perf_counter() 
                     r = await self._http.post(
                         "https://generativelanguage.googleapis.com/v1beta/interactions",
-                        json={"model": self.model, "input": f"{prompt}"}
+                        json={"model": self.model.name, "input": f"{prompt}"}
                     )
-                    print(f"Temps une requête: {time.perf_counter() - debut_simple_call:.1f}s")
         
                 except (httpx.RequestError) as e:
                     print(f"Erreur réseau : {type(e).__name__}")
@@ -47,11 +66,22 @@ class LLMClient:
                     # Pas d'erreur
                     if r.status_code == 200:
                         donnees = r.json()
-                        return donnees["steps"][1]["content"][0]["text"]
+                        print(json.dumps(donnees, indent=2))
+                        stop_timer = time.perf_counter() - start_timer
+                        return Call(
+                            text = donnees["steps"][1]["content"][0]["text"],
+                            prompt_tokens = donnees["usage"]["total_input_tokens"]["tokens"],
+                            completion_tokens = donnees["usage"]["total_output_tokens"],
+                            cost_usd = donnees["usage"]["total_input_tokens"] * self.model.pricing_in + donnees["usage"]["total_output_tokens"] * self.model.pricing_out,
+                            latency_ms = stop_timer,
+                            attempts = tentative
+                        )
                     
                     # Erreur def
                     if (r.status_code in (400, 401, 403, 404)):
-                        return f"Erreur def : {r.status_code}"
+                        return Call(
+                            error=f"Erreur def : {r.status_code}"
+                        )
                     
                     # Erreur temp
                     retry_after = r.headers.get("retry-after")
@@ -63,7 +93,9 @@ class LLMClient:
                     print(f"Wainting {delai}[s]")
                     await asyncio.sleep(delai)
         
-            return f"Echec après {self.max_tentative} tentatives"
+            return Call(
+                error=f"Echec après {self.max_tentative} tentatives"
+            )
 
     async def complete_many(self, prompts: list[str]) -> list[str]:
         return await asyncio.gather(*[self.complete(p) for p in prompts])
@@ -84,8 +116,13 @@ async def main():
         "Une blague courte sur les chats."
     ]
 
-    async with LLMClient("gemini-3.6-flash", api_key=GEMINI_API_KEY) as client:
-        resultats = await client.complete_many(inputs)
+    # Model infos: [Name, Pricing in, Pricing out]
+    gem_3_1_flash_lite = ModelInfo("gemini-3.1-flash-lite", 0.25, 1.50)
+    gem_3_5_flash_lite = ModelInfo("gemini-3.5-flash-lite", 1.50, 9.00)
+    gem_3_6_flash = ModelInfo("gemini-3.6-flash", 1.50, 9)
+
+    async with LLMClient(model=gem_3_1_flash_lite, api_key=GEMINI_API_KEY) as client:
+        resultats = await client.complete_many(inputs[:1])
 
     print(f"{time.perf_counter() - debut:.1f}s")
     print(resultats)

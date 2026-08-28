@@ -8,46 +8,69 @@ import random
 load_dotenv()
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
-async def call_llm_with_retry(n: int, client: httpx.AsyncClient, inputs: list[str], max_tentatives: int = 3) -> str:
-    for tentative in range(1, max_tentatives + 1):
-        retry_after = None
-        print(f"Tentatives : {tentative}/{max_tentatives}")
-        try:   
-            debut_simple_call = time.perf_counter() 
-            r = await client.post(
-                "https://generativelanguage.googleapis.com/v1beta/interactions",
-                json={"model": "gemini-3.6-flash", "input": f"{inputs[n]}"}
-            )
-            print(f"Temps une requête: {time.perf_counter() - debut_simple_call:.1f}s")
+class LLMClient:
+    def __init__(self, model: str, api_key: str = GEMINI_API_KEY, concurrency: int = 3, max_tentative: int = 3):
+        self.model = model
+        self.api_key = api_key
+        self._sem = asyncio.Semaphore(concurrency)
+        self.max_tentative = max_tentative
 
-        except (httpx.RequestError) as e:
-            print(f"Erreur réseau : {type(e).__name__}")
+    async def __aenter__(self):
+        # ouvrir les ressources, retourner self
+        self._http = httpx.AsyncClient(
+            timeout=60,
+            headers={"x-goog-api-key": self.api_key}
+        )  
+        return self
+    
+    async def __aexit__(self, exc_type, exc, tb):
+        # fermer les ressources
+        await self._http.aclose()
 
-        else:
-            # Pas d'erreur
-            if r.status_code == 200:
-                donnees = r.json()
-                return donnees["steps"][1]["content"][0]["text"]
-            
-            # Erreur def
-            if (r.status_code in (400, 401, 403, 404)):
-                return f"Erreur def : {r.status_code}"
-            
-            # Erreur temp
-            retry_after = r.headers.get("retry-after")
-            print(f"Erreur temp : {r.status_code}")
+    async def complete(self, prompt: str) -> str:
+        async with self._sem:      
+            for tentative in range(1, self.max_tentative + 1):
+                retry_after = None
+                print(f"Tentatives : {tentative}/{self.max_tentative}")
+                try:   
+                    debut_simple_call = time.perf_counter() 
+                    r = await self._http.post(
+                        "https://generativelanguage.googleapis.com/v1beta/interactions",
+                        json={"model": self.model, "input": f"{prompt}"}
+                    )
+                    print(f"Temps une requête: {time.perf_counter() - debut_simple_call:.1f}s")
+        
+                except (httpx.RequestError) as e:
+                    print(f"Erreur réseau : {type(e).__name__}")
+        
+                else:
+                    # Pas d'erreur
+                    if r.status_code == 200:
+                        donnees = r.json()
+                        return donnees["steps"][1]["content"][0]["text"]
+                    
+                    # Erreur def
+                    if (r.status_code in (400, 401, 403, 404)):
+                        return f"Erreur def : {r.status_code}"
+                    
+                    # Erreur temp
+                    retry_after = r.headers.get("retry-after")
+                    print(f"Erreur temp : {r.status_code}")
+        
+                # point d'attente unique
+                if tentative < self.max_tentative:
+                    delai = float(retry_after) if retry_after else random.uniform(1, 1+(2 ** (tentative - 1)))
+                    print(f"Wainting {delai}[s]")
+                    await asyncio.sleep(delai)
+        
+            return f"Echec après {self.max_tentative} tentatives"
 
-        # point d'attente unique
-        if tentative < max_tentatives:
-            delai = float(retry_after) if retry_after else random.uniform(1, 1+(2 ** (tentative - 1)))
-            print(f"Wainting {delai}[s]")
-            await asyncio.sleep(delai)
-
-    return f"Echec après {max_tentatives} tentatives"
+    async def complete_many(self, prompts: list[str]) -> list[str]:
+        return await asyncio.gather(*[self.complete(p) for p in prompts])
     
 
 async def main():
-    nb_call = 10
+    debut = time.perf_counter()        
     inputs = [
         "Explique la photosynthèse.",
         "Recette de pâte à crêpes ?",
@@ -60,20 +83,11 @@ async def main():
         "Corrige : 'Je sui allé au marché'.",
         "Une blague courte sur les chats."
     ]
-    debut = time.perf_counter()
-    sem = asyncio.Semaphore(3)
 
-    async def borne(n: int, client: httpx.AsyncClient) -> str:                       
-        async with sem:      
-            return await call_llm_with_retry(n, client, inputs)
-
-    async with httpx.AsyncClient(
-        timeout=0.001,
-        headers={"x-goog-api-key": GEMINI_API_KEY}
-    ) as client:
-        resultats = await asyncio.gather(*[borne(i, client) for i in range(nb_call)])
-        print(resultats)
+    async with LLMClient("gemini-3.6-flash", api_key=GEMINI_API_KEY) as client:
+        resultats = await client.complete_many(inputs)
 
     print(f"{time.perf_counter() - debut:.1f}s")
+    print(resultats)
 
 asyncio.run(main())

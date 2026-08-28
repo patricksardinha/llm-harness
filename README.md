@@ -59,7 +59,7 @@ Mesure du chemin d'échec, `timeout=0.001` pour forcer des `ConnectTimeout`,
 | Attente conditionnée à `tentative < max_tentatives` | 14,1 s |
 
 Les deux runs diffèrent aussi par la formule du délai, donc le gain n'est pas
-entièrement imputable au garde-fou. En attribuant par le calcul (les appels
+entièrement dû au garde-fou. En attribuant par le calcul (les appels
 étant instantanés, le temps mesuré n'est que du sommeil) : la suppression de
 l'attente superflue représente environ **55 % du temps d'échec initial**, le
 reste venant du raccourcissement des délais.

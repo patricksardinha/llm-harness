@@ -3,7 +3,6 @@ import asyncio
 import time
 import httpx
 import random
-import json
 
 from dotenv import load_dotenv
 
@@ -20,13 +19,24 @@ class ModelInfo:
 
 @dataclass
 class Call:
-    text: str = None
-    prompt_tokens: int = 0
+    text: str | None
+    error: str | None
+    prompt_tokens: int = 0 
     completion_tokens: int = 0
     cost_usd: float = 0
     latency_ms: float = 0
+    service_ms: float = 0
     attempts: int = 0
-    error: str = None
+
+@dataclass
+class Stats:
+    success_rate: int
+    total_cost : float
+    total_tokens: float
+    p50_latency: float
+    p95_latency: float
+    p50_service: float
+    p95_service: float
 
 class LLMClient:
     def __init__(self, model: ModelInfo, api_key: str = GEMINI_API_KEY, concurrency: int = 3, max_tentative: int = 3):
@@ -48,8 +58,9 @@ class LLMClient:
         await self._http.aclose()
 
     async def complete(self, prompt: str) -> Call:
+        t0_latency = time.perf_counter() 
         async with self._sem:      
-            start_timer = time.perf_counter() 
+            t0_service = time.perf_counter()
             for tentative in range(1, self.max_tentative + 1):
                 retry_after = None
                 print(f"Tentatives : {tentative}/{self.max_tentative}")
@@ -66,20 +77,24 @@ class LLMClient:
                     # Pas d'erreur
                     if r.status_code == 200:
                         donnees = r.json()
-                        print(json.dumps(donnees, indent=2))
-                        stop_timer = time.perf_counter() - start_timer
+                        #print(json.dumps(donnees, indent=2))
+                        t1_latency = time.perf_counter() - t0_latency
+                        t1_service = time.perf_counter() - t0_service
                         return Call(
                             text = donnees["steps"][1]["content"][0]["text"],
-                            prompt_tokens = donnees["usage"]["total_input_tokens"]["tokens"],
+                            error = None,
+                            prompt_tokens = donnees["usage"]["total_input_tokens"],
                             completion_tokens = donnees["usage"]["total_output_tokens"],
-                            cost_usd = donnees["usage"]["total_input_tokens"] * self.model.pricing_in + donnees["usage"]["total_output_tokens"] * self.model.pricing_out,
-                            latency_ms = stop_timer,
+                            cost_usd = (donnees["usage"]["total_input_tokens"] * self.model.pricing_in + donnees["usage"]["total_output_tokens"] * self.model.pricing_out) / 1_000_000,
+                            latency_ms = t1_latency * 1000,
+                            service_ms = t1_service * 1000,
                             attempts = tentative
                         )
                     
                     # Erreur def
                     if (r.status_code in (400, 401, 403, 404)):
                         return Call(
+                            text = None,
                             error=f"Erreur def : {r.status_code}"
                         )
                     
@@ -94,12 +109,48 @@ class LLMClient:
                     await asyncio.sleep(delai)
         
             return Call(
+                text = None,
                 error=f"Echec après {self.max_tentative} tentatives"
             )
 
-    async def complete_many(self, prompts: list[str]) -> list[str]:
+    async def complete_many(self, prompts: list[str]) -> list[Call]:
         return await asyncio.gather(*[self.complete(p) for p in prompts])
-    
+
+
+def percentiles(values: list[float]) -> tuple[float, float]:
+    n = len(values)
+    sorted_values = sorted(values)
+    if n == 0:
+        return 0.0, 0.0
+    p50 = sorted_values[int(0.5 * (n - 1))]
+    p95 = sorted_values[int(0.95 * (n - 1))]
+    return p50, p95
+
+def stats(calls: list[Call]) -> Stats:
+    success_rate: int = 0
+    total_cost : float = 0
+    total_tokens: float = 0
+
+    for call in calls:
+        if call.error is None:
+            success_rate += 1
+        total_cost += call.cost_usd
+        total_tokens += (call.prompt_tokens + call.completion_tokens)
+
+    success_calls = [c for c in calls if c.error is None]
+
+    p50_latency, p95_latency = percentiles([c.latency_ms for c in success_calls])
+    p50_services, p95_services = percentiles([c.service_ms for c in success_calls])
+
+    return Stats(
+        success_rate / len(calls), 
+        total_cost, 
+        total_tokens, 
+        p50_latency, 
+        p95_latency,
+        p50_services, 
+        p95_services
+    )
 
 async def main():
     debut = time.perf_counter()        
@@ -121,10 +172,19 @@ async def main():
     gem_3_5_flash_lite = ModelInfo("gemini-3.5-flash-lite", 1.50, 9.00)
     gem_3_6_flash = ModelInfo("gemini-3.6-flash", 1.50, 9)
 
+    t0 = time.perf_counter()
     async with LLMClient(model=gem_3_1_flash_lite, api_key=GEMINI_API_KEY) as client:
-        resultats = await client.complete_many(inputs[:1])
+        t1 = time.perf_counter()
+        resultats = await client.complete_many(inputs[4:5])
+        t2 = time.perf_counter()     
+    t3 = time.perf_counter()     
+    
+    print(f"ouverture {t1-t0:.1f} | appels {t2-t1:.1f} | fermeture {t3-t2:.1f}")
 
-    print(f"{time.perf_counter() - debut:.1f}s")
+    print(f"Total time : {time.perf_counter() - debut:.1f}s")
     print(resultats)
+
+    statistics = stats(resultats)
+    print(statistics)
 
 asyncio.run(main())

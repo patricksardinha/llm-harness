@@ -74,25 +74,27 @@ class LLMClient:
                     print(f"Erreur réseau : {type(e).__name__}")
         
                 else:
+                    status = sort_status(r.status_code)
+
                     # Pas d'erreur
-                    if r.status_code == 200:
+                    if status == "ok":
                         donnees = r.json()
                         #print(json.dumps(donnees, indent=2))
                         t1_latency = time.perf_counter() - t0_latency
                         t1_service = time.perf_counter() - t0_service
                         return Call(
-                            text = donnees["steps"][1]["content"][0]["text"],
+                            text = extract_text(donnees),
                             error = None,
                             prompt_tokens = donnees["usage"]["total_input_tokens"],
                             completion_tokens = donnees["usage"]["total_output_tokens"],
-                            cost_usd = (donnees["usage"]["total_input_tokens"] * self.model.pricing_in + donnees["usage"]["total_output_tokens"] * self.model.pricing_out) / 1_000_000,
+                            cost_usd = compute_cost(donnees["usage"]["total_input_tokens"], donnees["usage"]["total_output_tokens"], self.model),
                             latency_ms = t1_latency * 1000,
                             service_ms = t1_service * 1000,
                             attempts = tentative
                         )
                     
                     # Erreur def
-                    if (r.status_code in (400, 401, 403, 404)):
+                    if status == "definitive":
                         return Call(
                             text = None,
                             error=f"Erreur def : {r.status_code}"
@@ -104,9 +106,9 @@ class LLMClient:
         
                 # point d'attente unique
                 if tentative < self.max_tentative:
-                    delai = float(retry_after) if retry_after else random.uniform(1, 1+(2 ** (tentative - 1)))
-                    print(f"Wainting {delai}[s]")
-                    await asyncio.sleep(delai)
+                    delay = compute_delay(tentative, retry_after)
+                    print(f"Wainting {delay}[s]")
+                    await asyncio.sleep(delay)
         
             return Call(
                 text = None,
@@ -116,6 +118,27 @@ class LLMClient:
     async def complete_many(self, prompts: list[str]) -> list[Call]:
         return await asyncio.gather(*[self.complete(p) for p in prompts])
 
+
+def compute_cost(prompt_tokens: int, completion_tokens: int, model: ModelInfo) -> float:
+    cost = (prompt_tokens * model.pricing_in + completion_tokens * model.pricing_out) / 1_000_000
+    return cost
+
+def sort_status(status_code: int) -> str:
+    match status_code:
+        case 200:
+            return "ok"
+        case 400 | 401 | 403 | 404:
+            return "definitive"
+        case _:
+            return "transitional"
+
+def compute_delay(attempt: int, retry_after: str | None) -> float:
+    delay = float(retry_after) if retry_after else random.uniform(1, 1+(2 ** (attempt - 1)))
+    return delay
+
+def extract_text(data: dict) -> str:
+    values = data["steps"][1]["content"][0]["text"]
+    return values
 
 def percentiles(values: list[float]) -> tuple[float, float]:
     n = len(values)
@@ -187,4 +210,5 @@ async def main():
     statistics = stats(resultats)
     print(statistics)
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

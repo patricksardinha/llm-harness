@@ -1,5 +1,6 @@
 import pytest
-from main import ModelInfo, compute_cost, sort_status, compute_delay, extract_text
+import httpx
+from main import ModelInfo, LLMClient, compute_cost, sort_status, compute_delay, extract_text
 
 def test_compute_cost():
     model = ModelInfo("fake", 1.0, 2.0)
@@ -42,3 +43,18 @@ def test_compute_delay_with_retry():
 def test_extract_text():
     donnees = {"steps": [{"type": "thought"}, {"content": [{"text": "bonjour"}]}]}
     assert extract_text(donnees) == "bonjour"
+
+def handler(req):
+    return httpx.Response(400)
+
+@pytest.mark.asyncio
+async def test_400_without_retry():
+    transport = httpx.MockTransport(handler)
+    async with LLMClient(
+        ModelInfo("fake", 1.0, 2.0),
+        client=httpx.AsyncClient(transport=transport),
+    ) as client:
+        call = await client.complete("peu importe")
+
+    assert call.error is not None
+    assert call.attempts == 1

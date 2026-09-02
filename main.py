@@ -39,23 +39,34 @@ class Stats:
     p95_service: float
 
 class LLMClient:
-    def __init__(self, model: ModelInfo, api_key: str = GEMINI_API_KEY, concurrency: int = 3, max_tentative: int = 3):
+    def __init__(
+            self, 
+            model: ModelInfo,
+            api_key: str = GEMINI_API_KEY, 
+            concurrency: int = 3, 
+            max_tentative: int = 3,
+            client: httpx.AsyncClient | None = None
+    ):
         self.model = model
         self.api_key = api_key
         self._sem = asyncio.Semaphore(concurrency)
         self.max_tentative = max_tentative
+        self._http = client
+        self._owns_http = client is None
 
     async def __aenter__(self):
         # ouvrir les ressources, retourner self
-        self._http = httpx.AsyncClient(
-            timeout=60,
-            headers={"x-goog-api-key": self.api_key}
-        )  
+        if self.client is None:
+            self._http = httpx.AsyncClient(
+                timeout=60,
+                headers={"x-goog-api-key": self.api_key}
+            )  
         return self
     
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self,  exc_type, exc, tb):
         # fermer les ressources
-        await self._http.aclose()
+        if self._owns_http:
+            await self._http.aclose()
 
     async def complete(self, prompt: str) -> Call:
         t0_latency = time.perf_counter() 
@@ -97,7 +108,8 @@ class LLMClient:
                     if status == "definitive":
                         return Call(
                             text = None,
-                            error=f"Erreur def : {r.status_code}"
+                            error=f"Erreur def : {r.status_code}",
+                            attempts = tentative
                         )
                     
                     # Erreur temp

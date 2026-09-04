@@ -1,7 +1,9 @@
+from llm_client import GEMINI_API_KEY, LLMClient, ModelInfo, stats
 import asyncio
 import time
+import logging
 
-from llm_client import GEMINI_API_KEY, LLMClient, ModelInfo, stats
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
 async def main():
     debut = time.perf_counter()        

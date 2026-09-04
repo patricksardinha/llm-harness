@@ -15,6 +15,7 @@ politique de retry, comptabilité des tokens et du coût, et mesure systématiqu
 - Comptabilité par appel : tokens d'entrée et de sortie, coût en dollars,
   latence perçue, temps de service, nombre de tentatives
 - Statistiques agrégées : taux de succès, coût total, percentiles
+- Client HTTP injectable, pour tester sans réseau
 
 ---
 
@@ -122,6 +123,42 @@ premier token). Le modèle qui décrit ces mesures est
 Conséquence pratique : sur des réponses courtes, optimiser la génération ne sert
 à rien, tout est dans l'overhead. Il faut batcher ou mettre en cache.
 
+### Tests
+
+19 tests, exécutés en **0,26 s**, sans accès réseau et sans clé d'API valide.
+Couverture de la bibliothèque : **88 %**.
+
+```bash
+pytest -v
+pytest --cov=llm_client
+```
+
+Le principe retenu : on teste sa propre logique, pas le modèle. La qualité des
+réponses relève de l'évaluation, pas des tests unitaires.
+
+**Fonctions pures** — calcul du coût, classification des codes de statut
+(7 cas paramétrés), calcul du backoff et priorité de `Retry-After`, extraction
+du texte de la réponse, percentiles sur liste vide.
+
+**Logique de retry**, via `httpx.MockTransport` :
+
+| Test | Vérifie |
+|---|---|
+| 400 | Une seule tentative — aucun retry sur erreur définitive |
+| 500 × 3 | Trois tentatives, **deux** attentes seulement |
+| 429 puis 200 | Succès en deux tentatives, coût correct |
+| `complete_many` avec un 400 | 3 prompts → 3 résultats, exactement une erreur |
+| `ConnectError` levée par le transport | Trois tentatives, échec propre par le chemin de l'exception |
+
+Le test des trois 500 vérifie automatiquement le garde-fou mesuré plus haut :
+l'attente n'est appliquée qu'entre deux tentatives, jamais après la dernière.
+
+**Effet de bord structurel.** Écrire ces tests a révélé un défaut de découpage :
+`complete` mélangeait calcul et entrée-sortie. Quatre fonctions pures en ont été
+extraites, et le client HTTP est devenu injectable. Le code s'est réorganisé en
+noyau fonctionnel testable et couche impérative mince — la structure a suivi la
+testabilité, pas l'inverse.
+
 ### Limites connues de la mesure
 
 - Les tokens comptés sont ceux **observés**, pas ceux **facturés** : un échec
@@ -175,7 +212,9 @@ Paramètres du client :
 
 ```
 llm-harness/
-├── main.py
+├── llm_client.py         # bibliothèque : dataclasses, LLMClient, fonctions pures
+├── main.py               # script de démonstration
+├── test_llm_client.py    # suite de tests
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore

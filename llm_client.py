@@ -1,13 +1,17 @@
-import asyncio
 from dataclasses import dataclass
-import time
 from dotenv import load_dotenv
+import asyncio
+import time
 import os
 import httpx
 import random
+import logging
 
 load_dotenv()
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+
+logger = logging.getLogger(__name__)
+
 @dataclass
 class ModelInfo:
     name: str
@@ -71,7 +75,7 @@ class LLMClient:
             t0_service = time.perf_counter()
             for tentative in range(1, self.max_tentative + 1):
                 retry_after = None
-                print(f"Tentatives : {tentative}/{self.max_tentative}")
+                logger.debug("retry %d/%d", tentative, self.max_tentative)
                 try:   
                     r = await self._http.post(
                         "https://generativelanguage.googleapis.com/v1beta/interactions",
@@ -79,7 +83,7 @@ class LLMClient:
                     )
         
                 except (httpx.RequestError) as e:
-                    print(f"Erreur réseau : {type(e).__name__}")
+                    logger.warning("error network : %s", type(e).__name__)
         
                 else:
                     status = sort_status(r.status_code)
@@ -111,17 +115,18 @@ class LLMClient:
                     
                     # Erreur temp
                     retry_after = r.headers.get("retry-after")
-                    print(f"Erreur temp : {r.status_code}")
+                    logger.warning("error temp : %d", r.status_code)
         
                 # point d'attente unique
                 if tentative < self.max_tentative:
                     delay = compute_delay(tentative, retry_after)
-                    print(f"Wainting {delay}[s]")
+                    logger.warning("retry in %.1fs", delay)
                     await asyncio.sleep(delay)
-        
+
+            logger.error("fail after %d attempts", self.max_tentative)
             return Call(
                 text = None,
-                error = f"Echec après {self.max_tentative} tentatives",
+                error = f"fail after {self.max_tentative} attempts",
                 attempts = tentative
             )
 
@@ -159,11 +164,14 @@ def percentiles(values: list[float]) -> tuple[float, float]:
     p95 = sorted_values[int(0.95 * (n - 1))]
     return p50, p95
 
-def stats(calls: list[Call]) -> Stats:
+def stats(calls: list[Call]) -> Stats | None:
     success_rate: int = 0
     total_cost : float = 0
     total_tokens: float = 0
 
+    if calls == []:
+        return None
+    
     for call in calls:
         if call.error is None:
             success_rate += 1

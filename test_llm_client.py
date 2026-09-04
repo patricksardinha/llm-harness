@@ -1,6 +1,6 @@
 import pytest
 import httpx
-from llm_client import ModelInfo, LLMClient, compute_cost, sort_status, compute_delay, extract_text
+from llm_client import ModelInfo, LLMClient, compute_cost, percentiles, sort_status, compute_delay, extract_text, stats
 
 RESPONSE_OK = {
     "steps": [{"type": "thought"}, {"content": [{"text": "Hello"}]}],
@@ -50,7 +50,7 @@ def test_extract_text():
     assert extract_text(donnees) == "Hello"
 
 """
-Tests sequences
+Handlers
 """
 
 def handler_code(code: int):
@@ -65,6 +65,7 @@ def handler_sequence(reponses: list[httpx.Response]):
         compteur["n"] += 1
         return r
     return handler
+
 
 @pytest.mark.asyncio
 async def test_400_not_trigger_retry():
@@ -110,7 +111,7 @@ async def test_429_then_200_successed(monkeypatch):
 
     async with LLMClient(
         ModelInfo("fake", 1.0, 2.0),
-        client=httpx.AsyncClient(transport=transport),
+        client=httpx.AsyncClient(transport=transport)
     ) as client:
         call = await client.complete("Fake prompt")
 
@@ -120,19 +121,54 @@ async def test_429_then_200_successed(monkeypatch):
     assert call.cost_usd == ((1.0 * 10) + (2 * 20)) / 1_000_000
 
 @pytest.mark.asyncio
-async def test_sequence_200_400_200(monkeypatch):
-    transport = httpx.MockTransport(handler_sequence([httpx.Response(200, json=RESPONSE_OK), httpx.Response(400), httpx.Response(200, json=RESPONSE_OK)]))
-    sleep_time = []
+async def test_complete_many_returns_all_results_despite_failure():
+    transport = httpx.MockTransport(
+        handler_sequence(
+            [httpx.Response(200, json=RESPONSE_OK), 
+             httpx.Response(400), 
+             httpx.Response(200, json=RESPONSE_OK)]
+        )
+    )
     results = []
+
+    async with LLMClient(
+        ModelInfo("fake", 1.0, 2.0),
+        client=httpx.AsyncClient(transport=transport)
+    ) as client:
+        results = await client.complete_many(["Fake a", "Fake b", "Fake c"])
+
+    errors = [c for c in results if c.error is not None]
+    assert len(errors) == 1
+    assert len(results) == 3
+
+
+def test_percentiles_empty_values():
+    values = []
+    result = percentiles(values)      
+    assert result == (0.0, 0.0)
+
+
+def test_stats_divide_by_zero():
+    calls = []
+    result = stats(calls)
+    assert result is None
+
+@pytest.mark.asyncio
+async def test_network_error_exhausts_retries(monkeypatch):
+    def handler_raise(request):
+        raise httpx.ConnectError("raising")
+
+    sleep_time = []
     async def faux_asyncio_sleep(a):
         sleep_time.append(a)
-        return 0
     monkeypatch.setattr("llm_client.asyncio.sleep", faux_asyncio_sleep)
 
     async with LLMClient(
         ModelInfo("fake", 1.0, 2.0),
-        client=httpx.AsyncClient(transport=transport),
+        client=httpx.AsyncClient(transport=httpx.MockTransport(handler_raise)),
     ) as client:
         call = await client.complete("Fake prompt")
 
-    assert len(results) == 3
+    assert len(sleep_time) == 2
+    assert call.error is not None
+    assert call.attempts == 3

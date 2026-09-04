@@ -123,6 +123,39 @@ premier token). Le modèle qui décrit ces mesures est
 Conséquence pratique : sur des réponses courtes, optimiser la génération ne sert
 à rien, tout est dans l'overhead. Il faut batcher ou mettre en cache.
 
+### Embeddings : la limite de la recherche vectorielle
+
+Similarité cosinus calculée à la main (produit scalaire divisé par le produit
+des normes), sur trois configurations de modèle et de langue :
+
+| Paire | MiniLM-L6 (EN) | Multilingue (EN) | Multilingue (FR) |
+|---|---|---|---|
+| chat / félin | 0,698 | 0,556 | 0,208 |
+| chat / voiture | 0,463 | 0,351 | 0,412 |
+| **BZ-4471-A / BZ-4471-B** | **0,981** | **0,983** | **0,983** |
+
+Deux **références produit distinctes** obtiennent un score de quasi-identité,
+stable sur les trois configurations. Une référence n'est pas du langage : elle
+est découpée en fragments de sous-mots qui ne portent aucun sens, et deux codes
+voisins deviennent indiscernables dans l'espace vectoriel.
+
+Le modèle est donc **très sûr là où il a tort** (0,98 pour deux pièces
+différentes) et **hésitant là où il a raison** (0,21 pour deux mots liés). Sur
+un corpus industriel, l'information discriminante — références, codes pièce,
+numéros de norme, acronymes internes — est précisément celle que les embeddings
+ignorent. C'est la justification empirique de la recherche hybride
+(BM25 + dense), et l'explication probable de l'échec d'un précédent prototype
+RAG.
+
+Deux effets secondaires mesurés, également utiles :
+
+- **Le choix du modèle est un levier de qualité.** `all-MiniLM-L6-v2` est
+  anglophone ; les scores s'effondrent sur des entrées françaises.
+- **Un modèle peut se tromper sans le moindre signal.** En français, le modèle
+  multilingue place « chat » plus près de « voiture » que de « félin ». Cause
+  probable : ces modèles sont entraînés sur des *phrases*, et des mots isolés
+  sortent de leur distribution d'entraînement.
+
 ### Tests
 
 19 tests, exécutés en **0,26 s**, sans accès réseau et sans clé d'API valide.

@@ -156,6 +156,58 @@ Deux effets secondaires mesurés, également utiles :
   probable : ces modèles sont entraînés sur des *phrases*, et des mots isolés
   sortent de leur distribution d'entraînement.
 
+### Retrieval : mesure et reranking
+
+Corpus de 20 paragraphes, jeu d'évaluation de 20 questions écrites à la main
+(chaque question a un document attendu). Index en mémoire, similarité cosinus
+calculée à la main, sans base vectorielle.
+
+| | recall@1 | recall@3 | Temps (20 questions) |
+|---|---|---|---|
+| Bi-encodeur seul | 70 % | 100 % | 0,6 s |
+| + cross-encodeur (10 candidats) | **85 %** | 100 % | 7,1 s |
+
+**Le diagnostic tient dans l'écart entre les deux colonnes.** Un recall@3 de
+100 % pour un recall@1 de 70 % signifie que le bon document est *toujours*
+récupéré, mais mal classé une fois sur trois. Ce n'est pas un problème de
+récupération — chunking et modèle d'embedding font leur travail — c'est un
+problème de **classement**. C'est précisément ce qu'un reranker corrige, et
+c'est pourquoi il fallait mesurer avant de choisir quoi améliorer.
+
+**Bi-encodeur contre cross-encodeur.** Le premier encode requête et documents
+séparément, puis compare les vecteurs : les documents sont encodés une fois pour
+toutes, la recherche est quasi instantanée. Mais au moment de comprimer un
+document en 384 nombres, il ignore quelle sera la question. Le second traite la
+paire ensemble en une passe, voit les mots de la question face à ceux du
+document — bien plus précis, mais impossible à pré-calculer. D'où l'architecture
+en deux temps : le bi-encodeur ramène 10 candidats, le cross-encodeur les
+reclasse.
+
+**Le coût mesuré : ×12** (0,6 s → 7,1 s pour 20 questions, soit ~355 ms par
+requête). C'est ce facteur qui interdit de reranker tout un corpus, et qui
+justifie l'étage de présélection.
+
+**Une régression cachée par la moyenne.** Le reranker corrige 4 échecs mais en
+introduit 1 nouveau (« quel type de vélo pour longue distance »), soit +3 net.
+Une métrique agrégée aurait affiché 70 % → 70 % si les régressions avaient
+compensé les corrections, en masquant un changement de comportement complet.
+La comparaison doit se faire question par question, pas moyenne contre moyenne.
+
+**Le phénomène de l'aimant.** Un chunk générique capte les requêtes sans terme
+discriminant : le paragraphe de généralités concentrait 3 des 6 échecs du
+bi-encodeur. Après reranking le phénomène ne disparaît pas, il se déplace — le
+paragraphe « Ironman XXL » capte les 3 échecs restants.
+
+**Les échecs résiduels sont des quasi-doublons** : half-Ironman contre Ironman,
+distance olympique contre XXL. Un mot discriminant pèse trop peu dans un vecteur
+qui résume trois phrases — même constat que sur les références produit
+ci-dessus. C'est le cas d'usage de BM25 et de la recherche hybride.
+
+Deux réserves méthodologiques : sur 20 documents, retenir les 3 premiers revient
+à garder 15 % du corpus, ce qui rend le recall@3 de 100 % moins impressionnant
+qu'il n'y paraît ; et les temps sont mesurés après un tour de chauffe, sur une
+seule exécution.
+
 ### Tests
 
 19 tests, exécutés en **0,26 s**, sans accès réseau et sans clé d'API valide.

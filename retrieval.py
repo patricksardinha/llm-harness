@@ -1,6 +1,5 @@
-import time
-
 from sentence_transformers import CrossEncoder, SentenceTransformer
+import time
 import numpy as np
 
 model_multi = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
@@ -94,18 +93,19 @@ def print_echecs(titre, echecs):
         for score, idx, doc in top:
             print(f"    → doc {idx:>2}  score {float(score):.3f}  {doc[:60]}…")
 
-for k in [1, 3]:
-    search_reranked(QUESTIONS[0], CORPUS, mat, k=1)   # warm-up to get a non-noisy time for bi-encoder
+if __name__ == "__main__":
+    for k in [1, 3]:
+        search_reranked(QUESTIONS[0], CORPUS, mat, k=1)   # warm-up to get a non-noisy time for bi-encoder
 
-    t0_bi = time.perf_counter() 
-    r_bi, echecs_bi = recall_at(QUESTIONS, CORPUS, mat, k, search)
-    t1_bi = time.perf_counter() - t0_bi
+        t0_bi = time.perf_counter() 
+        r_bi, echecs_bi = recall_at(QUESTIONS, CORPUS, mat, k, search)
+        t1_bi = time.perf_counter() - t0_bi
 
-    t0_cross = time.perf_counter() 
-    r_cross, echecs_cross = recall_at(QUESTIONS, CORPUS, mat, k, search_reranked)
-    t1_cross = time.perf_counter() - t0_cross
+        t0_cross = time.perf_counter() 
+        r_cross, echecs_cross = recall_at(QUESTIONS, CORPUS, mat, k, search_reranked)
+        t1_cross = time.perf_counter() - t0_cross
 
-    print(f"recall@{k}  bi-encodeur {r_bi:.0%} [{t1_bi:.1f}s] |  + reranker {r_cross:.0%} [{t1_cross:.1f}s]")
-    print_echecs("bi-encoder", echecs_bi)
-    print()
-    print_echecs("cross-encoder", echecs_cross)
+        print(f"recall@{k}  bi-encodeur {r_bi:.0%} [{t1_bi:.1f}s] |  + reranker {r_cross:.0%} [{t1_cross:.1f}s]")
+        print_echecs("bi-encoder", echecs_bi)
+        print()
+        print_echecs("cross-encoder", echecs_cross)

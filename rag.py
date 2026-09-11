@@ -25,6 +25,10 @@ def judge_prompt(documents, question, reponse):
     "non" si la réponse contient une information absente des documents.
     Format : {{"verdict": "oui"|"non", "raison": "..."}} """
     return instruction
+
+
+def eval(cas: dict, texte: str, sources: list[int]) -> dict:
+    pass
     
 
 async def answer(question: str, client: LLMClient) -> tuple[str, list[int]]:
@@ -33,6 +37,7 @@ async def answer(question: str, client: LLMClient) -> tuple[str, list[int]]:
     prompt = prompt_builder(documents, question)
     call = await client.complete(prompt)
     return (call.text, [idx for _, idx, _ in top])
+
 
 async def demo():
     gem_3_1_flash_lite = ModelInfo("gemini-3.1-flash-lite", 0.25, 1.50)

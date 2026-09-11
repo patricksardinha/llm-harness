@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Quelles sont les trois disciplines enchaînées lors d'un triathlon ?",
+    "doc_attendu": 0,
+    "mots_cles": ["natation", "cyclisme", "course à pied"]
+  },
+  {
+    "question": "Quel format de triathlon est le plus adapté pour un débutant ?",
+    "doc_attendu": 1,
+    "mots_cles": ["750", "20 km", "5 km"]
+  },
+  {
+    "question": "Quelles sont les distances du triathlon aux Jeux olympiques ?",
+    "doc_attendu": 2,
+    "mots_cles": ["1,5 km", "40 km", "10 km"]
+  },
+  {
+    "question": "Pourquoi le half-Ironman s'appelle-t-il 70.3 ?",
+    "doc_attendu": 3,
+    "mots_cles": ["miles", "113"]
+  },
+  {
+    "question": "Quelle est la longueur totale d'un Ironman ?",
+    "doc_attendu": 4,
+    "mots_cles": ["3,8 km", "180 km", "42,195 km"]
+  },
+  {
+    "question": "Où se déroule historiquement le championnat du monde Ironman ?",
+    "doc_attendu": 5,
+    "mots_cles": ["kona", "1978"]
+  },
+  {
+    "question": "Que signifient T1 et T2 en triathlon ?",
+    "doc_attendu": 6,
+    "mots_cles": ["natation", "vélo"]
+  },
+  {
+    "question": "Est-ce qu'on a le droit de rouler dans la roue d'un autre concurrent ?",
+    "doc_attendu": 7,
+    "mots_cles": ["autorisé", "interdit"]
+  },
+  {
+    "question": "À partir de quelle température d'eau la combinaison est-elle interdite ?",
+    "doc_attendu": 8,
+    "mots_cles": ["24,5"]
+  },
+  {
+    "question": "Comment fait-on pour s'orienter quand on nage en eau libre ?",
+    "doc_attendu": 9,
+    "mots_cles": ["bouées"]
+  },
+  {
+    "question": "Quel type de vélo choisir pour un triathlon longue distance ?",
+    "doc_attendu": 10,
+    "mots_cles": ["prolongateur", "aéro"]
+  },
+  {
+    "question": "C'est quoi un entraînement en brique ?",
+    "doc_attendu": 11,
+    "mots_cles": ["vélo", "course"]
+  },
+  {
+    "question": "Combien de glucides faut-il consommer par heure sur un Ironman ?",
+    "doc_attendu": 12,
+    "mots_cles": ["60 et 90"]
+  },
+  {
+    "question": "Quelles astuces matérielles permettent d'accélérer le passage en transition ?",
+    "doc_attendu": 13,
+    "mots_cles": ["élastiques", "pédales automatiques"]
+  },
+  {
+    "question": "Dans quelle ville le triathlon a-t-il été inventé ?",
+    "doc_attendu": 14,
+    "mots_cles": ["san diego"]
+  },
+  {
+    "question": "Qui sont les triathlètes norvégiens les plus titrés ?",
+    "doc_attendu": 15,
+    "mots_cles": ["blummenfelt", "iden"]
+  },
+  {
+    "question": "Quel est le triathlon extrême avec un départ depuis un ferry dans un fjord ?",
+    "doc_attendu": 16,
+    "mots_cles": ["norseman", "fjord"]
+  },
+  {
+    "question": "Comment fonctionne le relais mixte olympique en triathlon ?",
+    "doc_attendu": 17,
+    "mots_cles": ["deux femmes", "deux hommes"]
+  },
+  {
+    "question": "Quelles métriques utiliser pour bien doser son effort en course ?",
+    "doc_attendu": 18,
+    "mots_cles": ["fréquence cardiaque", "allure"]
+  },
+  {
+    "question": "Comment les amateurs peuvent-ils se qualifier pour les championnats du monde ?",
+    "doc_attendu": 19,
+    "mots_cles": ["groupes d'âge"]
+  }
+]

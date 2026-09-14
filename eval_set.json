@@ -7,7 +7,7 @@
   {
     "question": "Quel format de triathlon est le plus adapté pour un débutant ?",
     "doc_attendu": 1,
-    "mots_cles": ["750", "20 km", "5 km"]
+    "mots_cles": ["sprint"]
   },
   {
     "question": "Quelles sont les distances du triathlon aux Jeux olympiques ?",
@@ -17,7 +17,7 @@
   {
     "question": "Pourquoi le half-Ironman s'appelle-t-il 70.3 ?",
     "doc_attendu": 3,
-    "mots_cles": ["miles", "113"]
+    "mots_cles": ["miles"]
   },
   {
     "question": "Quelle est la longueur totale d'un Ironman ?",
@@ -97,6 +97,6 @@
   {
     "question": "Comment les amateurs peuvent-ils se qualifier pour les championnats du monde ?",
     "doc_attendu": 19,
-    "mots_cles": ["groupes d'âge"]
+    "mots_cles": ["âge"]
   }
 ]

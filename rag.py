@@ -5,6 +5,7 @@ import json
 
 JUDGE_PROMPT_VERSION = "v1"
 CAS = json.load(open("eval_set.json", encoding="utf-8"))
+human_jugement = json.load(open("labels_humains.json", encoding="utf-8")) 
 
 def judge_prompt(documents, question, reponse):
     instruction = f"""
@@ -52,7 +53,7 @@ def prompt_builder(documents, question):
     return p
 
 
-def evaluate(cas: dict, texte: str, sources: list[int]) -> dict:
+def evaluate(cas: dict, texte: str, sources: list[int], documents: str) -> dict:
     retrieval = cas["doc_attendu"] in sources
     keywords = all(keyword.lower() in texte.lower() for keyword in cas["mots_cles"])
     not_empty = len(texte.strip()) > 10
@@ -60,6 +61,7 @@ def evaluate(cas: dict, texte: str, sources: list[int]) -> dict:
         "question": cas["question"],
         "texte": texte,
         "sources": sources,
+        "documents": documents,
         "retrieval": retrieval,
         "keywords": keywords,
         "not_empty": not_empty
@@ -67,19 +69,19 @@ def evaluate(cas: dict, texte: str, sources: list[int]) -> dict:
     return res
     
 
-async def answer(question: str, client: LLMClient) -> tuple[str, list[int]]:
+async def answer(question: str, client: LLMClient) -> tuple[str, list[int], str]:
     top = search_reranked(question, CORPUS, mat, k=3)
     documents = "\n".join(f"[{i}] {doc}" for i, (_, _, doc) in enumerate(top, 1))
     prompt = prompt_builder(documents, question)
     call = await client.complete(prompt)
-    return (call.text, [idx for _, idx, _ in top])
+    return (call.text, [idx for _, idx, _ in top], documents)
 
 
 async def get_results(cas, client: LLMClient) -> list[dict]:
     res = []
     for c in cas:
-        texte, idx = await answer(c["question"], client)
-        res_eval = evaluate(cas=c, texte=texte, sources=idx)
+        texte, idx, documents = await answer(c["question"], client)
+        res_eval = evaluate(cas=c, texte=texte, sources=idx, documents=documents)
         res.append(res_eval)
     return res
 
@@ -91,11 +93,15 @@ def display_results(results):
     print(f"Keywords  : {sum(1 for r in results if r['keywords']) / n:.0%}")
     print(f"Not empty  : {sum(1 for r in results if r['not_empty']) / n:.0%}")
 
-def display_jugement(jugement: dict):
-    print("_______ Jugement _______")
-    print(f"Verdict: {jugement['verdict']}\n")
-    print(f"Raison: {jugement['raison']}\n")
+def display_jugement(question: str, response: str, jugement: dict, i: int): 
+    print(f"\nJugement:")
+    print(f"Question: {question}")
+    print(f"Response: {response}")
+    print(f"Verdict juge vs human: {jugement['verdict']} | {human_jugement[i]['info']}")
+    print(f"Raison: {jugement['raison']}")
 
+def compare_judgements():
+    pass
 
 async def demo():
     testing_mode = True
@@ -104,13 +110,19 @@ async def demo():
     async with LLMClient(model=gem_3_1_flash_lite, api_key=GEMINI_API_KEY) as client:
         if testing_mode:
             loaded_results = json.load(open("results.json", encoding="utf-8"))   
-            index = 4
-            quest = loaded_results[index]["question"]
-            docs = "\n".join(f"[{i}] {CORPUS[i]}" for i in loaded_results[index]["sources"])
-            #resp = loaded_results[index]["texte"]
-            resp = "Les documents indiquent 3,8 km de natation, 180 km de vélo et 42,195 km de course, ce qui équivaut à une distance totale de 226 km."
-            jugement = await juge(question=quest, documents=docs, reponse=resp, client=client)
-            display_jugement(jugement)
+            save_judgements = True
+            judgements = []
+            for i, res in enumerate(loaded_results):
+                quest = res["question"]
+                docs = res["documents"]
+                resp = res["texte"]
+                jugement = await juge(question=quest, documents=docs, reponse=resp, client=client)
+                judgements.append(jugement)
+                display_jugement(quest, resp, jugement, i)
+
+            if save_judgements:
+                with open("judged.json", "w", encoding="utf-8") as f:
+                    json.dump(judgements, f, ensure_ascii=False, indent=2)
         else:
             save_result = False
             results = await get_results(CAS, client)

@@ -3,7 +3,7 @@ from retrieval import CORPUS, QUESTIONS, mat, search_reranked
 import asyncio
 import json
 
-JUDGE_PROMPT_VERSION = "v1"
+JUDGE_PROMPT_VERSION = "v2"
 CAS = json.load(open("eval_set.json", encoding="utf-8"))
 human_jugement = json.load(open("labels_humains.json", encoding="utf-8")) 
 
@@ -20,7 +20,10 @@ def judge_prompt(documents, question, reponse):
     Format : {{"verdict": "oui"|"non", "raison": "..."}} 
     
     Considère comme non fidèle toute information déduite, calculée ou inférée 
-    qui ne figure pas littéralement dans les documents, même si le calcul est correct."""
+    qui ne figure pas littéralement dans les documents, même si le calcul est correct.
+    
+    Les reformulations et synonymes sont acceptables; 
+    la suppression d'une condition ou d'une restriction ne l'est pas."""
     return instruction
 
 
@@ -100,8 +103,34 @@ def display_jugement(question: str, response: str, jugement: dict, i: int):
     print(f"Verdict juge vs human: {jugement['verdict']} | {human_jugement[i]['info']}")
     print(f"Raison: {jugement['raison']}")
 
-def compare_judgements():
-    pass
+def display_comparaison(comp: dict, total_size: int):
+    print(f"\nComparaison (total: {total_size}):")
+    print(f"{comp['detected_hallu']} hallucination detected, " 
+          f"{comp['missed_hallu']} hallucination missed, "
+          f"{comp['false_alert']} false alert, "
+          f"{comp['agree']} agreed, "
+          f"{comp['failed_judgement']} failed judgements"
+          f"\n{((comp['detected_hallu'] + comp['agree']) / total_size):.0%} overall agreement rate")
+
+def compare_judgements(judgements: list[dict], labels: list[dict]) -> dict:
+    OUTCOMES = {
+        # (judge, humain)
+        (False, False): "detected_hallu",   
+        (True,  False): "missed_hallu",
+        (False, True):  "false_alert",      
+        (True,  True):  "agree",            
+    }
+
+    comp = dict.fromkeys(OUTCOMES.values(), 0)
+    comp["failed_judgement"] = 0
+
+    for j, h in zip(judgements, labels, strict=True):
+        if j["verdict"] is None:
+            comp["failed_judgement"] += 1
+        else: 
+            comp[OUTCOMES[bool(j["verdict"]), bool(h["info"])]] += 1
+    return comp
+
 
 async def demo():
     testing_mode = True
@@ -110,19 +139,28 @@ async def demo():
     async with LLMClient(model=gem_3_1_flash_lite, api_key=GEMINI_API_KEY) as client:
         if testing_mode:
             loaded_results = json.load(open("results.json", encoding="utf-8"))   
+            reuse_judgements = True
             save_judgements = True
-            judgements = []
-            for i, res in enumerate(loaded_results):
-                quest = res["question"]
-                docs = res["documents"]
-                resp = res["texte"]
-                jugement = await juge(question=quest, documents=docs, reponse=resp, client=client)
-                judgements.append(jugement)
-                display_jugement(quest, resp, jugement, i)
+            if reuse_judgements:
+                save_judgements = False
+                judgements = json.load(open(f"{JUDGE_PROMPT_VERSION}_judged.json", encoding="utf-8"))
+            else:
+                judgements = []
+                for i, res in enumerate(loaded_results):
+                    quest = res["question"]
+                    docs = res["documents"]
+                    resp = res["texte"]
+                    jugement = await juge(question=quest, documents=docs, reponse=resp, client=client)
+                    judgements.append(jugement)
+                    display_jugement(quest, resp, jugement, i)
 
             if save_judgements:
-                with open("judged.json", "w", encoding="utf-8") as f:
+                with open(f"{JUDGE_PROMPT_VERSION}_judged.json", "w", encoding="utf-8") as f:
                     json.dump(judgements, f, ensure_ascii=False, indent=2)
+
+            comp = compare_judgements(judgements, human_jugement)
+            display_comparaison(comp, len(judgements))
+
         else:
             save_result = False
             results = await get_results(CAS, client)

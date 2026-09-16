@@ -1,0 +1,102 @@
+[
+  {
+    "verdict": true,
+    "raison": "Le document [1] stipule explicitement que le triathlon enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Le document [1] stipule explicitement que le format sprint est le plus accessible pour débuter, ce qui confirme la réponse donnée.",
+    "brut": null
+  },
+  {
+    "verdict": false,
+    "raison": "La réponse contient une information absente des documents : le fait que Simon Whitfield a gagné la première édition n'est mentionné dans aucun des documents fournis.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "L'information selon laquelle le chiffre 70.3 correspond à la distance totale exprimée en miles figure littéralement dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": false,
+    "raison": "La réponse contient une information (226 km) qui est le résultat d'un calcul personnel et non d'une donnée littéralement présente dans les documents fournis. Conformément aux instructions, les informations déduites ou calculées ne sont pas considérées comme fidèles.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement l'information présente dans le document [1], qui indique que le championnat du monde Ironman s'est historiquement disputé à Kona, sur l'île d'Hawaï, depuis 1978.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement et littéralement les définitions de T1 et T2 fournies dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1]. L'ajout du terme 'rouler dans la roue d'un autre' pour expliquer le drafting est une reformulation acceptable du terme entre parenthèses déjà présent dans le document source.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "L'information selon laquelle la combinaison est interdite au-dessus de 24,5 °C pour les groupes d'âge figure explicitement dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1] concernant la technique du water-polo pour se repérer en eau libre.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Toutes les informations contenues dans la réponse sont explicitement présentes dans le document [2], qui précise que le vélo de contre-la-montre est privilégié sur les formats longs et détaille ses caractéristiques (prolongateur aéro, roues à jantes hautes, géométrie spécifique).",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reformule fidèlement les informations présentes dans le document [1], qui définit les entraînements briques comme des entraînements spécifiques enchaînant le vélo et la course à pied pour habituer le corps à la transition et à la sensation de jambes lourdes.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement l'information contenue dans le document [1] en précisant la quantité de glucides recommandée par heure sur le vélo lors d'un Ironman.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1] concernant l'utilisation des élastiques et des pédales automatiques pour gagner du temps lors de la transition.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Le document [1] indique explicitement que le triathlon est né dans les années 1970 en Californie, à San Diego, ce qui confirme la réponse fournie.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Toutes les informations contenues dans la réponse sont explicitement présentes dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "L'information selon laquelle le Norseman, en Norvège, comporte un départ depuis un ferry dans un fjord est explicitement mentionnée dans le document [1]. La réponse est donc entièrement appuyée par les documents fournis.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1] concernant la composition de l'équipe (deux femmes et deux hommes) et les distances du super-sprint (environ 300 m de natation, 8 km de vélo et 2 km de course).",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les trois métriques citées dans le document [1] pour gérer l'intensité et éviter l'explosion en fin d'épreuve, ce qui correspond au dosage de l'effort.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations présentes dans le document [1], qui indique que les meilleurs de chaque catégorie d'âge (tranches de cinq ans) peuvent se qualifier pour les championnats du monde, en citant les slots pour Kona comme exemple.",
+    "brut": null
+  }
+]

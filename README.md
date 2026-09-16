@@ -208,6 +208,87 @@ Deux réserves méthodologiques : sur 20 documents, retenir les 3 premiers revie
 qu'il n'y paraît ; et les temps sont mesurés après un tour de chauffe, sur une
 seule exécution.
 
+### Évaluation : pipeline RAG et juge calibré
+
+Pipeline complet : `search_reranked` → injection des 3 passages dans le prompt →
+génération. Jeu d'évaluation de 20 questions versionné dans `eval_set.json`,
+avec pour chacune le document attendu et les mots-clés obligatoires.
+
+#### Assertions déterministes
+
+| Métrique | Valeur |
+|---|---|
+| Retrieval (le bon document est dans le contexte) | 100 % |
+| Mots-clés obligatoires présents | 100 % |
+| Réponse non vide | 100 % |
+
+**Ces 100 % ne sont pas un bon résultat, c'est un jeu d'éval saturé.** Les
+mots-clés ont été ajustés après lecture des réponses pour corriger trois faux
+négatifs (une réponse correcte rejetée parce qu'elle employait un synonyme, ou
+parce que le jeu exigeait des faits que la question ne demandait pas). Le test
+a donc convergé vers la sortie observée et ne peut plus détecter de régression
+fine. Il garde sa valeur de test de fumée, pas de mesure de qualité.
+
+Limite structurelle des assertions par mots-clés : faux négatifs sur les
+formulations alternatives, faux positifs sur les sous-chaînes fortuites
+(`"40"` est contenu dans `"42,195"`). C'est la raison d'être du juge.
+
+#### Calibration du juge (LLM-as-judge, faithfulness)
+
+Critère binaire : chaque affirmation de la réponse est-elle appuyée sur les
+documents **effectivement fournis** ? 20 réponses annotées à la main, à
+l'aveugle, avant de voir les verdicts du juge. Quatre cas négatifs injectés
+volontairement.
+
+| Version | Accord | Détectées | Manquées | Fausses alertes |
+|---|---|---|---|---|
+| v0 (avant correctif) | **50 %** | — | — | — |
+| v1 | 95 % | 3 | 1 | 0 |
+| v2 | 90 % | 2 | 2 | 0 |
+
+**La première calibration a trouvé un bug, pas un mauvais juge.** À 50 %
+d'accord, neuf désaccords sur dix portaient la même raison : *« la réponse cite
+le document [1], or les documents fournis sont [6], [18], [0] »*. Le générateur
+numérotait les passages par position (`[1] [2] [3]`) et le juge les
+renumérotait par indice dans le corpus. Les deux ne voyaient pas les mêmes
+étiquettes. Correctif : la chaîne de documents envoyée au modèle est désormais
+**conservée**, pas reconstruite — toute reconstruction peut diverger de
+l'original.
+
+**Un accord peut être fortuit.** En v1, le juge et l'annotation humaine étaient
+d'accord sur un cas — mais pour des raisons différentes : l'humain avait relevé
+une inférence causale, le juge avait relevé que la réponse écrivait « course à
+pied » là où le document disait « course ». D'où la règle : lire les raisons,
+pas seulement les verdicts.
+
+**La baisse de 95 % à 90 % est une mesure plus honnête, pas une régression.**
+La v2 a supprimé le pinaillage lexical (« les reformulations et synonymes sont
+acceptables »), ce qui a fait disparaître l'accord fortuit. Le diagnostic
+devient net : ce juge détecte les **ajouts explicites** (un nom propre inventé,
+un calcul affiché) et rate ce qui relève du raisonnement — une inférence
+implicite, ou la suppression d'une condition (une réponse transformant
+« privilégié sur les formats longs *sans drafting* » en règle absolue est
+passée dans les deux versions).
+
+Les deux types d'erreur n'ont pas le même coût, d'où la matrice plutôt qu'un
+taux unique : une hallucination manquée part en production, une fausse alerte
+fait seulement perdre du temps.
+
+#### Effet de bord : le retry a sauvé le run
+
+Quatre erreurs 500 pendant la campagne de jugement, quatre reprises après le
+délai indiqué par l'en-tête `Retry-After` du provider. Aucun verdict perdu,
+aucun run à recommencer.
+
+#### Prochaines étapes identifiées
+
+Le jeu d'évaluation est trop facile pour rester discriminant : il faudrait des
+questions sans réponse dans le corpus (test anti-hallucination, le bon
+comportement étant le refus), des questions multi-documents, et des questions
+piégeuses sur les quasi-doublons. Côté juge, une version demandant d'énumérer
+les affirmations une par une avant de trancher forcerait le raisonnement plutôt
+que la comparaison lexicale.
+
 ### Tests
 
 19 tests, exécutés en **0,26 s**, sans accès réseau et sans clé d'API valide.
@@ -298,12 +379,20 @@ Paramètres du client :
 ```
 llm-harness/
 ├── llm_client.py         # bibliothèque : dataclasses, LLMClient, fonctions pures
+├── retrieval.py          # index en mémoire, cosinus, bi-encodeur + reranking
+├── rag.py                # pipeline RAG, assertions, juge, calibration
 ├── main.py               # script de démonstration
 ├── test_llm_client.py    # suite de tests
+├── eval_set.json         # jeu d'évaluation (versionné)
+├── labels_humains.json   # annotations manuelles de référence (versionné)
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
 └── README.md
 ```
+
+`.venv/`, `.env`, `results.json` et `*_judged.json` ne sont pas versionnés :
+ce sont des sorties d'exécution. Le jeu d'évaluation et les annotations
+humaines, eux, sont des données sources.
 
 `.venv/` et `.env` ne sont pas versionnés.

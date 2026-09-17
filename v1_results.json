@@ -1,0 +1,262 @@
+[
+  {
+    "question": "Quelles sont les trois disciplines enchaînées lors d'un triathlon ?",
+    "texte": "Les trois disciplines enchaînées lors d'un triathlon sont la natation, le cyclisme et la course à pied.",
+    "sources": [
+      0,
+      11,
+      13
+    ],
+    "documents": "[1] Le triathlon est un sport d'endurance qui enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied. Le chronomètre ne s'arrête jamais entre les épreuves, les transitions font partie intégrante de la course.\n[2] L'enchaînement vélo-course provoque une sensation de jambes lourdes bien connue des triathlètes. Les entraînements spécifiques appelés briques, qui enchaînent les deux disciplines, permettent d'habituer le corps à cette transition.\n[3] Les élastiques de chaussures et les pédales automatiques permettent de gagner du temps en transition : les triathlètes laissent leurs chaussures clipsées sur le vélo et les enfilent en roulant après un départ pieds nus.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quel format de triathlon est le plus adapté pour un débutant ?",
+    "texte": "D'après le document [1], le format sprint est le plus adapté pour un débutant car c'est le format le plus accessible pour commencer.",
+    "sources": [
+      1,
+      4,
+      0
+    ],
+    "documents": "[1] Le format sprint comprend 750 m de natation, 20 km de vélo et 5 km de course à pied. C'est le format le plus accessible pour débuter, avec un effort total d'environ une heure pour les amateurs entraînés.\n[2] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[3] Le triathlon est un sport d'endurance qui enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied. Le chronomètre ne s'arrête jamais entre les épreuves, les transitions font partie intégrante de la course.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quelles sont les distances du triathlon aux Jeux olympiques ?",
+    "texte": "D'après le document [2], la distance olympique se compose de 1,5 km de natation, 40 km de vélo et 10 km de course à pied. Simon Whitfield a gagné la première édition",
+    "sources": [
+      4,
+      2,
+      7
+    ],
+    "documents": "[1] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[2] La distance olympique, aussi appelée distance M ou courte distance, se compose de 1,5 km de natation, 40 km de vélo et 10 km de course à pied. C'est le format disputé aux Jeux olympiques depuis Sydney 2000.\n[3] En triathlon courte distance au niveau élite, le drafting (aspiration-abri derrière un autre cycliste) est autorisé. Sur les épreuves longue distance et la plupart des courses amateurs, il est interdit et sanctionné par des pénalités.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Pourquoi le half-Ironman s'appelle-t-il 70.3 ?",
+    "texte": "Le half-Ironman s'appelle 70.3 car ce chiffre correspond à la distance totale de la course exprimée en miles [1].",
+    "sources": [
+      3,
+      4,
+      5
+    ],
+    "documents": "[1] Le half-Ironman, ou Ironman 70.3, totalise 113 km : 1,9 km de natation, 90 km de vélo et un semi-marathon de 21,1 km. Le chiffre 70.3 correspond à la distance totale exprimée en miles.\n[2] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[3] Le championnat du monde Ironman s'est historiquement disputé à Kona, sur l'île d'Hawaï, depuis 1978. La course est réputée pour sa chaleur, son humidité et les vents violents de la traversée de l'Energy Lab.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quelle est la longueur totale d'un Ironman ?",
+    "texte": "La distance totale d'un Ironman n'est pas explicitement mentionnée comme un chiffre unique dans les documents fournis. Toutefois, en additionnant les distances indiquées dans le document [2] (3,8 km de natation + 180 km de vélo + 42,195 km de course à pied), on obtient une distance totale de 226 km.",
+    "sources": [
+      3,
+      4,
+      1
+    ],
+    "documents": "[1] Le half-Ironman, ou Ironman 70.3, totalise 113 km : 1,9 km de natation, 90 km de vélo et un semi-marathon de 21,1 km. Le chiffre 70.3 correspond à la distance totale exprimée en miles.\n[2] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[3] Le format sprint comprend 750 m de natation, 20 km de vélo et 5 km de course à pied. C'est le format le plus accessible pour débuter, avec un effort total d'environ une heure pour les amateurs entraînés.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Où se déroule historiquement le championnat du monde Ironman ?",
+    "texte": "Le championnat du monde Ironman se déroule historiquement à Kona, sur l'île d'Hawaï, depuis 1978.",
+    "sources": [
+      5,
+      14,
+      15
+    ],
+    "documents": "[1] Le championnat du monde Ironman s'est historiquement disputé à Kona, sur l'île d'Hawaï, depuis 1978. La course est réputée pour sa chaleur, son humidité et les vents violents de la traversée de l'Energy Lab.\n[2] Le triathlon est né dans les années 1970 en Californie, à San Diego, avant de connaître son essor avec le premier Ironman d'Hawaï en 1978, remporté par Gordon Haller devant 14 autres participants.\n[3] La Norvège a dominé le triathlon mondial ces dernières années, avec Kristian Blummenfelt, champion olympique à Tokyo et champion du monde Ironman, et Gustav Iden, vainqueur à Kona en 2022 avec un record du parcours.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Que signifient T1 et T2 en triathlon ?",
+    "texte": "D'après le document [1], en triathlon, T1 désigne le passage de la natation au vélo, et T2 désigne le passage du vélo à la course à pied.",
+    "sources": [
+      6,
+      18,
+      0
+    ],
+    "documents": "[1] La transition T1 désigne le passage de la natation au vélo, et la T2 le passage du vélo à la course à pied. Une transition efficace peut faire gagner de précieuses secondes, on parle parfois de quatrième discipline.\n[2] La fréquence cardiaque, la puissance en watts sur le vélo et l'allure au kilomètre en course à pied sont les trois métriques principales utilisées par les triathlètes pour gérer leur intensité et éviter l'explosion en fin d'épreuve.\n[3] Le triathlon est un sport d'endurance qui enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied. Le chronomètre ne s'arrête jamais entre les épreuves, les transitions font partie intégrante de la course.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Est-ce qu'on a le droit de rouler dans la roue d'un autre concurrent ?",
+    "texte": "La réponse dépend du type d'épreuve :\n\n*   En triathlon courte distance au niveau élite, le drafting (rouler dans la roue d'un autre) est autorisé.\n*   Sur les épreuves longue distance et la plupart des courses amateurs, il est interdit et sanctionné par des pénalités.",
+    "sources": [
+      7,
+      10,
+      11
+    ],
+    "documents": "[1] En triathlon courte distance au niveau élite, le drafting (aspiration-abri derrière un autre cycliste) est autorisé. Sur les épreuves longue distance et la plupart des courses amateurs, il est interdit et sanctionné par des pénalités.\n[2] Le vélo de contre-la-montre, avec son prolongateur aéro, ses roues à jantes hautes et sa géométrie spécifique, est privilégié sur les formats longs sans drafting. Sur courte distance avec drafting, le vélo de route classique est obligatoire.\n[3] L'enchaînement vélo-course provoque une sensation de jambes lourdes bien connue des triathlètes. Les entraînements spécifiques appelés briques, qui enchaînent les deux disciplines, permettent d'habituer le corps à cette transition.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "À partir de quelle température d'eau la combinaison est-elle interdite ?",
+    "texte": "D'après le document [1], la combinaison est interdite au-dessus de 24,5 °C pour les groupes d'âge.",
+    "sources": [
+      8,
+      9,
+      5
+    ],
+    "documents": "[1] Le port de la combinaison néoprène en natation dépend de la température de l'eau : elle est généralement obligatoire en dessous de 16 °C et interdite au-dessus de 24,5 °C pour les groupes d'âge selon la réglementation.\n[2] La natation en eau libre se déroule en lac, en mer ou en rivière. Les triathlètes utilisent la technique du water-polo, tête hors de l'eau, pour se repérer par rapport aux bouées du parcours.\n[3] Le championnat du monde Ironman s'est historiquement disputé à Kona, sur l'île d'Hawaï, depuis 1978. La course est réputée pour sa chaleur, son humidité et les vents violents de la traversée de l'Energy Lab.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Comment fait-on pour s'orienter quand on nage en eau libre ?",
+    "texte": "Pour s'orienter en eau libre, les triathlètes utilisent la technique du water-polo, qui consiste à nager la tête hors de l'eau pour se repérer par rapport aux bouées du parcours [1].",
+    "sources": [
+      9,
+      1,
+      6
+    ],
+    "documents": "[1] La natation en eau libre se déroule en lac, en mer ou en rivière. Les triathlètes utilisent la technique du water-polo, tête hors de l'eau, pour se repérer par rapport aux bouées du parcours.\n[2] Le format sprint comprend 750 m de natation, 20 km de vélo et 5 km de course à pied. C'est le format le plus accessible pour débuter, avec un effort total d'environ une heure pour les amateurs entraînés.\n[3] La transition T1 désigne le passage de la natation au vélo, et la T2 le passage du vélo à la course à pied. Une transition efficace peut faire gagner de précieuses secondes, on parle parfois de quatrième discipline.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quel type de vélo choisir pour un triathlon longue distance ?",
+    "texte": "Pour un triathlon longue distance, le vélo de contre-la-montre est privilégié. Celui-ci est équipé d'un prolongateur aéro, de roues à jantes hautes et possède une géométrie spécifique.",
+    "sources": [
+      4,
+      10,
+      11
+    ],
+    "documents": "[1] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[2] Le vélo de contre-la-montre, avec son prolongateur aéro, ses roues à jantes hautes et sa géométrie spécifique, est privilégié sur les formats longs sans drafting. Sur courte distance avec drafting, le vélo de route classique est obligatoire.\n[3] L'enchaînement vélo-course provoque une sensation de jambes lourdes bien connue des triathlètes. Les entraînements spécifiques appelés briques, qui enchaînent les deux disciplines, permettent d'habituer le corps à cette transition.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "C'est quoi un entraînement en brique ?",
+    "texte": "Un entraînement en brique est un entraînement spécifique au triathlon qui consiste à enchaîner le vélo et la course à pied afin d'habituer le corps à la sensation de jambes lourdes lors de la transition entre ces deux disciplines [1].",
+    "sources": [
+      11,
+      7,
+      13
+    ],
+    "documents": "[1] L'enchaînement vélo-course provoque une sensation de jambes lourdes bien connue des triathlètes. Les entraînements spécifiques appelés briques, qui enchaînent les deux disciplines, permettent d'habituer le corps à cette transition.\n[2] En triathlon courte distance au niveau élite, le drafting (aspiration-abri derrière un autre cycliste) est autorisé. Sur les épreuves longue distance et la plupart des courses amateurs, il est interdit et sanctionné par des pénalités.\n[3] Les élastiques de chaussures et les pédales automatiques permettent de gagner du temps en transition : les triathlètes laissent leurs chaussures clipsées sur le vélo et les enfilent en roulant après un départ pieds nus.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Combien de glucides faut-il consommer par heure sur un Ironman ?",
+    "texte": "Sur un Ironman, un athlète vise généralement entre 60 et 90 grammes de glucides par heure sur le vélo [1].",
+    "sources": [
+      12,
+      4,
+      3
+    ],
+    "documents": "[1] La nutrition est souvent considérée comme le nerf de la guerre sur longue distance. Sur un Ironman, un athlète vise généralement entre 60 et 90 grammes de glucides par heure sur le vélo, via gels, boissons et barres énergétiques.\n[2] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[3] Le half-Ironman, ou Ironman 70.3, totalise 113 km : 1,9 km de natation, 90 km de vélo et un semi-marathon de 21,1 km. Le chiffre 70.3 correspond à la distance totale exprimée en miles.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quelles astuces matérielles permettent d'accélérer le passage en transition ?",
+    "texte": "D'après le document [1], les astuces matérielles permettant d'accélérer le passage en transition sont l'utilisation d'élastiques de chaussures et de pédales automatiques.",
+    "sources": [
+      13,
+      11,
+      18
+    ],
+    "documents": "[1] Les élastiques de chaussures et les pédales automatiques permettent de gagner du temps en transition : les triathlètes laissent leurs chaussures clipsées sur le vélo et les enfilent en roulant après un départ pieds nus.\n[2] L'enchaînement vélo-course provoque une sensation de jambes lourdes bien connue des triathlètes. Les entraînements spécifiques appelés briques, qui enchaînent les deux disciplines, permettent d'habituer le corps à cette transition.\n[3] La fréquence cardiaque, la puissance en watts sur le vélo et l'allure au kilomètre en course à pied sont les trois métriques principales utilisées par les triathlètes pour gérer leur intensité et éviter l'explosion en fin d'épreuve.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Dans quelle ville le triathlon a-t-il été inventé ?",
+    "texte": "Le triathlon a été inventé à San Diego, en Californie.",
+    "sources": [
+      14,
+      16,
+      15
+    ],
+    "documents": "[1] Le triathlon est né dans les années 1970 en Californie, à San Diego, avant de connaître son essor avec le premier Ironman d'Hawaï en 1978, remporté par Gordon Haller devant 14 autres participants.\n[2] Le Norseman, en Norvège, est réputé comme l'un des triathlons extrêmes les plus durs au monde : départ natation depuis un ferry dans un fjord glacial, 180 km de vélo en montagne et une arrivée au sommet du Gaustatoppen.\n[3] La Norvège a dominé le triathlon mondial ces dernières années, avec Kristian Blummenfelt, champion olympique à Tokyo et champion du monde Ironman, et Gustav Iden, vainqueur à Kona en 2022 avec un record du parcours.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Qui sont les triathlètes norvégiens les plus titrés ?",
+    "texte": "D'après les documents fournis, les triathlètes norvégiens mentionnés sont :\n\n*   **Kristian Blummenfelt** : champion olympique à Tokyo et champion du monde Ironman.\n*   **Gustav Iden** : vainqueur à Kona en 2022 avec un record du parcours.",
+    "sources": [
+      15,
+      16,
+      4
+    ],
+    "documents": "[1] La Norvège a dominé le triathlon mondial ces dernières années, avec Kristian Blummenfelt, champion olympique à Tokyo et champion du monde Ironman, et Gustav Iden, vainqueur à Kona en 2022 avec un record du parcours.\n[2] Le Norseman, en Norvège, est réputé comme l'un des triathlons extrêmes les plus durs au monde : départ natation depuis un ferry dans un fjord glacial, 180 km de vélo en montagne et une arrivée au sommet du Gaustatoppen.\n[3] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quel est le triathlon extrême avec un départ depuis un ferry dans un fjord ?",
+    "texte": "Le triathlon extrême avec un départ depuis un ferry dans un fjord est le Norseman, en Norvège [1].",
+    "sources": [
+      16,
+      9,
+      0
+    ],
+    "documents": "[1] Le Norseman, en Norvège, est réputé comme l'un des triathlons extrêmes les plus durs au monde : départ natation depuis un ferry dans un fjord glacial, 180 km de vélo en montagne et une arrivée au sommet du Gaustatoppen.\n[2] La natation en eau libre se déroule en lac, en mer ou en rivière. Les triathlètes utilisent la technique du water-polo, tête hors de l'eau, pour se repérer par rapport aux bouées du parcours.\n[3] Le triathlon est un sport d'endurance qui enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied. Le chronomètre ne s'arrête jamais entre les épreuves, les transitions font partie intégrante de la course.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Comment fonctionne le relais mixte olympique en triathlon ?",
+    "texte": "En course par équipe, le relais mixte olympique fonctionne de la manière suivante : deux femmes et deux hommes enchaînent chacun un super-sprint composé d'environ 300 m de natation, 8 km de vélo et 2 km de course.",
+    "sources": [
+      17,
+      4,
+      13
+    ],
+    "documents": "[1] En course par équipe, le relais mixte est devenu discipline olympique à Tokyo 2020 : deux femmes et deux hommes enchaînent chacun un super-sprint d'environ 300 m de natation, 8 km de vélo et 2 km de course.\n[2] L'Ironman, ou triathlon XXL, est le format mythique de la longue distance : 3,8 km de natation, 180 km de vélo et un marathon complet de 42,195 km. Les meilleurs professionnels le bouclent en moins de 8 heures.\n[3] Les élastiques de chaussures et les pédales automatiques permettent de gagner du temps en transition : les triathlètes laissent leurs chaussures clipsées sur le vélo et les enfilent en roulant après un départ pieds nus.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Quelles métriques utiliser pour bien doser son effort en course ?",
+    "texte": "Pour bien doser son effort en course, les trois métriques principales à utiliser sont :\n*   La fréquence cardiaque ;\n*   La puissance en watts (sur le vélo) ;\n*   L'allure au kilomètre (en course à pied).",
+    "sources": [
+      18,
+      0,
+      1
+    ],
+    "documents": "[1] La fréquence cardiaque, la puissance en watts sur le vélo et l'allure au kilomètre en course à pied sont les trois métriques principales utilisées par les triathlètes pour gérer leur intensité et éviter l'explosion en fin d'épreuve.\n[2] Le triathlon est un sport d'endurance qui enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied. Le chronomètre ne s'arrête jamais entre les épreuves, les transitions font partie intégrante de la course.\n[3] Le format sprint comprend 750 m de natation, 20 km de vélo et 5 km de course à pied. C'est le format le plus accessible pour débuter, avec un effort total d'environ une heure pour les amateurs entraînés.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  },
+  {
+    "question": "Comment les amateurs peuvent-ils se qualifier pour les championnats du monde ?",
+    "texte": "Les amateurs peuvent se qualifier pour les championnats du monde en se classant parmi les meilleurs de leur catégorie d'âge (tranches de cinq ans), comme pour les slots de Kona.",
+    "sources": [
+      19,
+      1,
+      2
+    ],
+    "documents": "[1] Les catégories d'âge, appelées groupes d'âge ou age groups, permettent aux amateurs de se comparer par tranches de cinq ans. Les meilleurs de chaque catégorie peuvent se qualifier pour les championnats du monde, comme les slots pour Kona.\n[2] Le format sprint comprend 750 m de natation, 20 km de vélo et 5 km de course à pied. C'est le format le plus accessible pour débuter, avec un effort total d'environ une heure pour les amateurs entraînés.\n[3] La distance olympique, aussi appelée distance M ou courte distance, se compose de 1,5 km de natation, 40 km de vélo et 10 km de course à pied. C'est le format disputé aux Jeux olympiques depuis Sydney 2000.",
+    "retrieval": true,
+    "keywords": true,
+    "not_empty": true
+  }
+]

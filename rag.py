@@ -1,11 +1,19 @@
-from llm_client import GEMINI_API_KEY, LLMClient, ModelInfo
+import dataclasses
+
+from llm_client import GEMINI_API_KEY, LLMClient, ModelInfo, Stats, stats
 from retrieval import CORPUS, QUESTIONS, mat, search_reranked
 import asyncio
 import json
+import sys
 
+""" ---------------- globals ---------------- """
+
+GEN_VERSION = "v1"
 JUDGE_PROMPT_VERSION = "v2"
 CAS = json.load(open("eval_set.json", encoding="utf-8"))
 human_jugement = json.load(open("labels_humains.json", encoding="utf-8")) 
+
+""" ---------------- prompts ---------------- """
 
 def judge_prompt(documents, question, reponse):
     instruction = f"""
@@ -27,23 +35,6 @@ def judge_prompt(documents, question, reponse):
     return instruction
 
 
-async def juge(question: str, documents: str, reponse: str, client: LLMClient) -> dict:
-    call = await client.complete(judge_prompt(documents, question, reponse))
-    jugement = call.text.replace("```json", "").replace("```", "").strip()
-
-    try:
-        data = json.loads(jugement)
-    except json.JSONDecodeError:
-        return {"verdict": None, "raison": "parsing failed", "brut": call.text}
-
-    judge_response = {
-        "verdict": {"oui": True, "non": False}.get(data["verdict"]),
-        "raison": data.get("raison"),
-        "brut": None
-    }
-    return judge_response
-
-
 def prompt_builder(documents, question):
     p = f"""
     Réponds à la question en te basant uniquement sur les documents ci-dessous.
@@ -55,11 +46,18 @@ def prompt_builder(documents, question):
     Question : {question}"""
     return p
 
+""" ---------------- eval ---------------- """
 
 def evaluate(cas: dict, texte: str, sources: list[int], documents: str) -> dict:
-    retrieval = cas["doc_attendu"] in sources
-    keywords = all(keyword.lower() in texte.lower() for keyword in cas["mots_cles"])
-    not_empty = len(texte.strip()) > 10
+    if texte is None:
+        texte = "error"
+        retrieval = False
+        keywords = False
+        not_empty = False
+    else:
+        retrieval = cas["doc_attendu"] in sources
+        keywords = all(keyword.lower() in texte.lower() for keyword in cas["mots_cles"])
+        not_empty = len(texte.strip()) > 10
     res = {
         "question": cas["question"],
         "texte": texte,
@@ -70,47 +68,8 @@ def evaluate(cas: dict, texte: str, sources: list[int], documents: str) -> dict:
         "not_empty": not_empty
     }
     return res
-    
 
-async def answer(question: str, client: LLMClient) -> tuple[str, list[int], str]:
-    top = search_reranked(question, CORPUS, mat, k=3)
-    documents = "\n".join(f"[{i}] {doc}" for i, (_, _, doc) in enumerate(top, 1))
-    prompt = prompt_builder(documents, question)
-    call = await client.complete(prompt)
-    return (call.text, [idx for _, idx, _ in top], documents)
-
-
-async def get_results(cas, client: LLMClient) -> list[dict]:
-    res = []
-    for c in cas:
-        texte, idx, documents = await answer(c["question"], client)
-        res_eval = evaluate(cas=c, texte=texte, sources=idx, documents=documents)
-        res.append(res_eval)
-    return res
-
-def display_results(results):
-    n = len(results)
-    for i, c in enumerate(results):
-        print(f"[{i}] Question: {c['question']}\nResponse: {c['texte']}\nSource: {c['sources']}\n\n")
-    print(f"Retrieval : {sum(1 for r in results if r['retrieval']) / n:.0%}")
-    print(f"Keywords  : {sum(1 for r in results if r['keywords']) / n:.0%}")
-    print(f"Not empty  : {sum(1 for r in results if r['not_empty']) / n:.0%}")
-
-def display_jugement(question: str, response: str, jugement: dict, i: int): 
-    print(f"\nJugement:")
-    print(f"Question: {question}")
-    print(f"Response: {response}")
-    print(f"Verdict juge vs human: {jugement['verdict']} | {human_jugement[i]['info']}")
-    print(f"Raison: {jugement['raison']}")
-
-def display_comparaison(comp: dict, total_size: int):
-    print(f"\nComparaison (total: {total_size}):")
-    print(f"{comp['detected_hallu']} hallucination detected, " 
-          f"{comp['missed_hallu']} hallucination missed, "
-          f"{comp['false_alert']} false alert, "
-          f"{comp['agree']} agreed, "
-          f"{comp['failed_judgement']} failed judgements"
-          f"\n{((comp['detected_hallu'] + comp['agree']) / total_size):.0%} overall agreement rate")
+""" ---------------- judge ---------------- """
 
 def compare_judgements(judgements: list[dict], labels: list[dict]) -> dict:
     OUTCOMES = {
@@ -132,44 +91,126 @@ def compare_judgements(judgements: list[dict], labels: list[dict]) -> dict:
     return comp
 
 
+def prepare_judge(result: dict) -> str: # prompt
+    prompt = judge_prompt(result["documents"], result["question"], result["texte"])
+    return prompt
+
+
+async def juge(results: list[dict], client: LLMClient) -> list[dict]:
+    preps_judge = [prepare_judge(r) for r in results]
+    calls = await client.complete_many(preps_judge)
+    judgements = []
+    for call in calls:
+        jugement = call.text.replace("```json", "").replace("```", "").strip()
+
+        try:
+            data = json.loads(jugement)
+        except json.JSONDecodeError:
+            judgements.append({"verdict": None, "raison": "parsing failed", "brut": call.text})
+            continue
+
+        judge_response = {
+            "verdict": {"oui": True, "non": False}.get(data.get("verdict")),
+            "raison": data.get("raison"),
+            "brut": None
+        }
+        judgements.append(judge_response)
+    return judgements
+
+""" ---------------- results ---------------- """
+
+def prepare(question: str) -> tuple[str, list[int], str]: # prompt, sources, documents
+    top = search_reranked(question, CORPUS, mat, k=3)
+    documents = "\n".join(f"[{i}] {doc}" for i, (_, _, doc) in enumerate(top, 1))
+    prompt = prompt_builder(documents, question)
+    return (prompt, [idx for _, idx, _ in top], documents)
+
+
+async def get_results(cas, client: LLMClient) -> tuple[list[dict], Stats]:
+    preps = [prepare(c["question"]) for c in cas]
+    calls = await client.complete_many([p for p, _, _ in preps])
+    statistics = stats(calls)
+    return ([evaluate(c, call.text, src, docs)
+        for c, call, (_, src, docs) in zip(cas, calls, preps, strict=True)], statistics)
+
+""" ---------------- display ---------------- """
+
+def display_dict(title: str | None, d: dict):
+    if title is not None:
+        print(f"\n{title}")
+    for cle, valeur in d.items():
+        print(f"  {cle:<20} {valeur}")
+
+
+def display_results(results):
+    n = len(results)
+    for i, c in enumerate(results):
+        print(f"[{i}] Question: {c['question']}\nResponse: {c['texte']}\nSource: {c['sources']}\n\n")
+    print(f"Retrieval : {sum(1 for r in results if r['retrieval']) / n:.0%}")
+    print(f"Keywords  : {sum(1 for r in results if r['keywords']) / n:.0%}")
+    print(f"Not empty  : {sum(1 for r in results if r['not_empty']) / n:.0%}")
+
+
+def display_jugement(results: list[dict], judgements: dict): 
+    print(f"\nJugement:")
+    for i, (res, judgement) in enumerate(zip(results, judgements)):
+        print(f"Question: {res['question']}")
+        print(f"Response: {res['texte']}")
+        print(f"Verdict juge vs human: {judgement['verdict']} | {human_jugement[i]['info']}")
+        print(f"Raison: {judgement['raison']}")
+
+
+def display_comparaison(comp: dict, total_size: int):
+    print(f"\nComparaison (total: {total_size}):")
+    print(f"{comp['detected_hallu']} hallucination detected, " 
+          f"{comp['missed_hallu']} hallucination missed, "
+          f"{comp['false_alert']} false alert, "
+          f"{comp['agree']} agreed, "
+          f"{comp['failed_judgement']} failed judgements"
+          f"\n{((comp['detected_hallu'] + comp['agree']) / total_size):.0%} overall agreement rate")
+
+
+""" ---------------- start point ---------------- """
+
 async def demo():
-    testing_mode = True
+    mode = sys.argv[1] if len(sys.argv) > 1 else "compare"
+    # "generate" | "judge" | "compare"
+
     gem_3_1_flash_lite = ModelInfo("gemini-3.1-flash-lite", 0.25, 1.50)
     
     async with LLMClient(model=gem_3_1_flash_lite, api_key=GEMINI_API_KEY) as client:
-        if testing_mode:
-            loaded_results = json.load(open("results.json", encoding="utf-8"))   
-            reuse_judgements = True
-            save_judgements = True
-            if reuse_judgements:
-                save_judgements = False
-                judgements = json.load(open(f"{JUDGE_PROMPT_VERSION}_judged.json", encoding="utf-8"))
-            else:
-                judgements = []
-                for i, res in enumerate(loaded_results):
-                    quest = res["question"]
-                    docs = res["documents"]
-                    resp = res["texte"]
-                    jugement = await juge(question=quest, documents=docs, reponse=resp, client=client)
-                    judgements.append(jugement)
-                    display_jugement(quest, resp, jugement, i)
+        if mode == "generate":
+            results, statistics = await get_results(CAS, client)
+            display_results(results)
+            display_dict("Statistics", dataclasses.asdict(statistics))
 
-            if save_judgements:
-                with open(f"{JUDGE_PROMPT_VERSION}_judged.json", "w", encoding="utf-8") as f:
-                    json.dump(judgements, f, ensure_ascii=False, indent=2)
+            with open(f"{GEN_VERSION}_results.json", "w", encoding="utf-8") as f:
+                json.dump(results, f, ensure_ascii=False, indent=2)
 
+        elif mode == "judge":
+            try:
+                loaded_results = json.load(open(f"{GEN_VERSION}_results.json", encoding="utf-8"))
+            except FileNotFoundError:
+                print(f"Error : {GEN_VERSION}_results.json not found : python rag.py generate")
+                return
+            
+            judgements = await juge(results=loaded_results, client=client)
+            display_jugement(loaded_results, judgements)
+
+            with open(f"{JUDGE_PROMPT_VERSION}_judged.json", "w", encoding="utf-8") as f:
+                json.dump(judgements, f, ensure_ascii=False, indent=2)
+
+        elif mode == "compare":
+            # tofix: labels_humains.json with version 
+            # {GEN_VERSION}_{JUDGE_PROMPT_VERSION}_judged.json for compatibles versions
+            judgements = json.load(open(f"{JUDGE_PROMPT_VERSION}_judged.json", encoding="utf-8"))
             comp = compare_judgements(judgements, human_jugement)
             display_comparaison(comp, len(judgements))
 
         else:
-            save_result = False
-            results = await get_results(CAS, client)
-            display_results(results)
-
-            if save_result:
-                with open("results.json", "w", encoding="utf-8") as f:
-                    json.dump(results, f, ensure_ascii=False, indent=2)
-                 
+            print("Invalid mode")
+            return
+   
 
 if __name__ == "__main__":
     asyncio.run(demo())

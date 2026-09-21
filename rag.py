@@ -8,12 +8,23 @@ import sys
 
 """ ---------------- globals ---------------- """
 
-GEN_VERSION = "v1"
+GEN_VERSION = "v2"
 JUDGE_PROMPT_VERSION = "v2"
 CAS = json.load(open("eval_set.json", encoding="utf-8"))
-human_jugement = json.load(open("labels_humains.json", encoding="utf-8")) 
 
 """ ---------------- prompts ---------------- """
+
+def prompt_builder(documents, question):
+    p = f"""
+    Réponds à la question en te basant uniquement sur les documents ci-dessous.
+    Si l'information n'y figure pas, dis-le.
+
+    Documents :
+    {documents}
+
+    Question : {question}"""
+    return p
+
 
 def judge_prompt(documents, question, reponse):
     instruction = f"""
@@ -33,18 +44,6 @@ def judge_prompt(documents, question, reponse):
     Les reformulations et synonymes sont acceptables; 
     la suppression d'une condition ou d'une restriction ne l'est pas."""
     return instruction
-
-
-def prompt_builder(documents, question):
-    p = f"""
-    Réponds à la question en te basant uniquement sur les documents ci-dessous.
-    Si l'information n'y figure pas, dis-le.
-
-    Documents :
-    {documents}
-
-    Question : {question}"""
-    return p
 
 """ ---------------- eval ---------------- """
 
@@ -156,8 +155,15 @@ def display_jugement(results: list[dict], judgements: dict):
     for i, (res, judgement) in enumerate(zip(results, judgements)):
         print(f"Question: {res['question']}")
         print(f"Response: {res['texte']}")
-        print(f"Verdict juge vs human: {judgement['verdict']} | {human_jugement[i]['info']}")
+        print(f"Judge verdict: {judgement['verdict']}")
         print(f"Raison: {judgement['raison']}")
+
+
+def display_differences_judge_human(judgements: dict, labels: dict):
+    print(f"\nDifferences between judge and human:")
+    for i, (judgement, label) in enumerate(zip(judgements, labels)):
+        if judgement['verdict'] != label['info']:
+            print(f"[{i}] juge vs human: {judgement['verdict']} ({judgement['raison']}) | {label['info']}")
 
 
 def display_comparaison(comp: dict, total_size: int):
@@ -197,15 +203,16 @@ async def demo():
             judgements = await juge(results=loaded_results, client=client)
             display_jugement(loaded_results, judgements)
 
-            with open(f"{JUDGE_PROMPT_VERSION}_judged.json", "w", encoding="utf-8") as f:
+            with open(f"{GEN_VERSION}_{JUDGE_PROMPT_VERSION}_judged.json", "w", encoding="utf-8") as f:
                 json.dump(judgements, f, ensure_ascii=False, indent=2)
 
         elif mode == "compare":
-            # tofix: labels_humains.json with version 
             # {GEN_VERSION}_{JUDGE_PROMPT_VERSION}_judged.json for compatibles versions
-            judgements = json.load(open(f"{JUDGE_PROMPT_VERSION}_judged.json", encoding="utf-8"))
+            judgements = json.load(open(f"{GEN_VERSION}_{JUDGE_PROMPT_VERSION}_judged.json", encoding="utf-8"))
+            human_jugement = json.load(open(f"{GEN_VERSION}_labels.json", encoding="utf-8")) 
             comp = compare_judgements(judgements, human_jugement)
             display_comparaison(comp, len(judgements))
+            display_differences_judge_human(judgements, human_jugement)
 
         else:
             print("Invalid mode")

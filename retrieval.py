@@ -1,9 +1,21 @@
-from sentence_transformers import CrossEncoder, SentenceTransformer
+from functools import cache
 import time
 import numpy as np
 
-model_multi = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-model_cross_multi = CrossEncoder("cross-encoder/mmarco-mMiniLMv2-L12-H384-v1")
+
+@cache
+def get_bi_encoder():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+
+@cache
+def get_cross_encoder():
+    from sentence_transformers import CrossEncoder
+    return CrossEncoder("cross-encoder/mmarco-mMiniLMv2-L12-H384-v1")
+
+@cache
+def get_index():
+    return get_bi_encoder().encode(CORPUS)
 
 CORPUS = [
     "Le triathlon est un sport d'endurance qui enchaîne trois disciplines dans l'ordre : natation, cyclisme et course à pied. Le chronomètre ne s'arrête jamais entre les épreuves, les transitions font partie intégrante de la course.",
@@ -53,13 +65,12 @@ QUESTIONS = [
 ]
 
 query = "comment gérer son alimentation pendant une longue course"
-mat = model_multi.encode(CORPUS)
 
 def cosinus(a, b) -> float:
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 def search(query: str, corpus: list[str], mat, k: int = 3) -> list[tuple[float, int, str]]:
-    q = model_multi.encode(query)
+    q = get_bi_encoder().encode(query)
     scores = []
     for i, vector in enumerate(mat):
         score = cosinus(q, vector)
@@ -69,7 +80,7 @@ def search(query: str, corpus: list[str], mat, k: int = 3) -> list[tuple[float, 
 def search_reranked(query: str, corpus: list[str], mat, k: int = 3, n_candidats: int = 10) -> list[tuple[float, int, str]]:
     top_candidats = search(query, corpus, mat, k = n_candidats)
     paires = [(query, doc) for _, _, doc in top_candidats]
-    new_scores = model_cross_multi.predict(paires)
+    new_scores = get_cross_encoder().predict(paires)
     resultats = []
     for score, (_, idx, doc) in zip(new_scores, top_candidats):
         resultats.append((score, idx, doc))
@@ -95,14 +106,14 @@ def print_echecs(titre, echecs):
 
 if __name__ == "__main__":
     for k in [1, 3]:
-        search_reranked(QUESTIONS[0], CORPUS, mat, k=1)   # warm-up to get a non-noisy time for bi-encoder
+        search_reranked(QUESTIONS[0], CORPUS, get_index(), k=1)   # warm-up to get a non-noisy time for bi-encoder
 
         t0_bi = time.perf_counter() 
-        r_bi, echecs_bi = recall_at(QUESTIONS, CORPUS, mat, k, search)
+        r_bi, echecs_bi = recall_at(QUESTIONS, CORPUS, get_index(), k, search)
         t1_bi = time.perf_counter() - t0_bi
 
         t0_cross = time.perf_counter() 
-        r_cross, echecs_cross = recall_at(QUESTIONS, CORPUS, mat, k, search_reranked)
+        r_cross, echecs_cross = recall_at(QUESTIONS, CORPUS, get_index(), k, search_reranked)
         t1_cross = time.perf_counter() - t0_cross
 
         print(f"recall@{k}  bi-encodeur {r_bi:.0%} [{t1_bi:.1f}s] |  + reranker {r_cross:.0%} [{t1_cross:.1f}s]")

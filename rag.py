@@ -1,7 +1,8 @@
 import dataclasses
+import time
 
 from llm_client import GEMINI_API_KEY, LLMClient, ModelInfo, Stats, stats
-from retrieval import CORPUS, QUESTIONS, mat, search_reranked
+from retrieval import CORPUS, QUESTIONS, get_index, search_reranked
 import asyncio
 import json
 import sys
@@ -119,7 +120,7 @@ async def juge(results: list[dict], client: LLMClient) -> list[dict]:
 """ ---------------- results ---------------- """
 
 def prepare(question: str) -> tuple[str, list[int], str]: # prompt, sources, documents
-    top = search_reranked(question, CORPUS, mat, k=3)
+    top = search_reranked(question, CORPUS, get_index(), k=3)
     documents = "\n".join(f"[{i}] {doc}" for i, (_, _, doc) in enumerate(top, 1))
     prompt = prompt_builder(documents, question)
     return (prompt, [idx for _, idx, _ in top], documents)
@@ -213,7 +214,6 @@ async def demo():
             comp = compare_judgements(judgements, human_jugement)
             display_comparaison(comp, len(judgements))
             display_differences_judge_human(judgements, human_jugement)
-
         else:
             print("Invalid mode")
             return

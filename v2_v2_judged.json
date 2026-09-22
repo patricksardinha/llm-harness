@@ -1,0 +1,102 @@
+[
+  {
+    "verdict": true,
+    "raison": "La réponse identifie correctement les trois disciplines (natation, cyclisme, course à pied) telles qu'elles sont listées textuellement dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Le document [1] indique explicitement que le format sprint est « le format le plus accessible pour débuter », ce qui confirme l'affirmation de la réponse.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [2] concernant la composition du format olympique, sans ajout ni déduction externe.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "L'information selon laquelle le chiffre 70.3 correspond à la distance totale exprimée en miles figure explicitement dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Les documents listent effectivement les trois distances individuelles (3,8 km, 180 km et 42,195 km) sans jamais mentionner explicitement la somme totale en kilomètres pour un Ironman. La réponse est donc fidèle aux documents.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement l'information présente dans le document [1], qui indique que le championnat du monde Ironman s'est historiquement disputé à Kona, sur l'île d'Hawaï, depuis 1978.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement et littéralement les définitions de T1 et T2 fournies dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Toutes les informations contenues dans la réponse sont explicitement présentes dans le document [1]. La définition du drafting entre parenthèses dans la réponse est une reformulation fidèle du contenu des documents.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement l'information contenue dans le document [1] concernant la température d'interdiction de la combinaison pour les groupes d'âge.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1] concernant la technique du water-polo pour se repérer par rapport aux bouées.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Chaque élément de la réponse est directement tiré du document [2] : le type de vélo (contre-la-montre), le contexte (longue distance sans drafting) et les caractéristiques techniques (prolongateur aéro, roues à jantes hautes, géométrie spécifique) sont explicitement mentionnés.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1]. L'ajout de « à pied » après « course » est une précision synonyme acceptée dans le contexte du triathlon pour désigner la discipline citée dans le texte.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement l'information contenue dans le document [1] en précisant la quantité de glucides et la condition spécifique (sur le vélo) mentionnée dans le texte.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse identifie correctement les éléments mentionnés dans le document [1] comme des astuces permettant de gagner du temps en transition.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Le document [1] indique explicitement que le triathlon est né à San Diego, en Californie, dans les années 1970.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Toutes les informations contenues dans la réponse sont explicitement présentes dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "L'affirmation selon laquelle le Norseman est un triathlon extrême avec un départ depuis un ferry dans un fjord en Norvège est directement appuyée par le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Toutes les informations contenues dans la réponse sont explicitement présentes dans le document [1].",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "Chaque métrique citée dans la réponse est explicitement mentionnée dans le document [1] comme étant l'une des trois métriques principales utilisées par les triathlètes pour gérer l'intensité.",
+    "brut": null
+  },
+  {
+    "verdict": true,
+    "raison": "La réponse reprend fidèlement les informations contenues dans le document [1] en précisant que la qualification pour les championnats du monde est réservée aux meilleurs de chaque catégorie d'âge (tranches de cinq ans), en citant l'exemple des slots pour Kona.",
+    "brut": null
+  }
+]

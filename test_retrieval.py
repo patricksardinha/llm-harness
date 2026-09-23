@@ -5,7 +5,7 @@ from retrieval import CORPUS, QUESTIONS, get_index, recall_at, search_reranked
 @pytest.mark.slow
 def test_recall_at_1_no_regression():
     score, _ = recall_at(QUESTIONS, CORPUS, get_index(), 1, search_reranked)
-    assert score >= 0.75
+    assert score >= 0.99
 
 
 @pytest.mark.slow

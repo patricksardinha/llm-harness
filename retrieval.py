@@ -1,4 +1,5 @@
 from functools import cache
+from models import BI_ENCODER, CROSS_ENCODER
 import time
 import numpy as np
 
@@ -6,12 +7,12 @@ import numpy as np
 @cache
 def get_bi_encoder():
     from sentence_transformers import SentenceTransformer
-    return SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+    return SentenceTransformer(BI_ENCODER)
 
 @cache
 def get_cross_encoder():
     from sentence_transformers import CrossEncoder
-    return CrossEncoder("cross-encoder/mmarco-mMiniLMv2-L12-H384-v1")
+    return CrossEncoder(CROSS_ENCODER)
 
 @cache
 def get_index():

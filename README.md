@@ -1,5 +1,5 @@
 # llm-harness
-![CI](https://github.com/<ton-user>/llm-harness/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/patricksardinha/llm-harness/actions/workflows/ci.yml/badge.svg)
 
 Client Python pour appels concurrents à des API de LLM : concurrence bornée,
 politique de retry, comptabilité des tokens et du coût, et mesure systématique.

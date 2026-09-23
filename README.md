@@ -1,4 +1,5 @@
 # llm-harness
+
 ![CI](https://github.com/patricksardinha/llm-harness/actions/workflows/ci.yml/badge.svg)
 
 Client Python pour appels concurrents à des API de LLM : concurrence bornée,
@@ -290,6 +291,66 @@ piégeuses sur les quasi-doublons. Côté juge, une version demandant d'énumér
 les affirmations une par une avant de trancher forcerait le raisonnement plutôt
 que la comparaison lexicale.
 
+### Industrialisation
+
+#### Intégration continue
+
+GitHub Actions à chaque push : 21 tests en ~1m25, sans aucune clé d'API.
+Le workflow installe la version CPU de `torch` avant les dépendances (pip choisit
+CUDA par défaut sur Linux — plusieurs Go inutiles sans GPU) et met en cache les
+modèles Hugging Face, la clé du cache étant dérivée du fichier qui déclare les
+identifiants de modèles.
+
+**Un gate de régression sur le retrieval** fait échouer le build si
+`recall@1` descend sous 0,75 — soit deux questions ratées de plus que la mesure
+actuelle, sur vingt. Aucune mécanique dédiée : un `assert` dans un test pytest
+suffit. Le gate a été vérifié en montant temporairement le seuil à 0,99 pour
+constater la CI rouge : un gate dont on n'a jamais vu l'échec n'est pas un gate
+vérifié.
+
+**Pourquoi le retrieval et pas la génération.** Le retrieval est déterministe —
+poids fixes, arithmétique, tri, aucun tirage — donc une baisse est toujours une
+vraie régression. La génération échantillonne à chaque token : un gate sur elle
+produirait des échecs aléatoires qu'on finirait par ignorer.
+
+#### Chargement paresseux
+
+| `pytest -m "not slow"` | Temps |
+|---|---|
+| Modèles chargés à l'import | 46 s |
+| Chargement paresseux (`@cache`) | **0,5 s** |
+
+Les 19 tests unitaires prenaient 46 secondes alors qu'ils sont tous mockés et
+n'ont besoin d'aucun modèle. Cause : `-m "not slow"` empêche l'*exécution* des
+tests lents, pas l'*import* de leur fichier — et `retrieval.py` chargeait deux
+modèles et encodait le corpus au niveau du module. Même symptôme côté CLI :
+`python rag.py compare` chargeait deux modèles d'apprentissage automatique pour
+comparer deux fichiers JSON.
+
+Correctif : rien ne se charge à l'import, tout est chargé au premier usage et
+mémorisé par `functools.cache`, avec l'import de `sentence_transformers`
+(qui tire `torch`) placé à l'intérieur de la fonction.
+
+#### Génération concurrente du jeu d'évaluation
+
+Le pipeline d'évaluation est découpé en trois phases : préparation synchrone
+(recherche et construction des prompts), génération concurrente via
+`complete_many`, puis évaluation. Campagne complète sur 20 questions :
+
+| Métrique | Valeur |
+|---|---|
+| Coût total | 0,0024 $ |
+| Coût projeté pour 1 000 questions | **0,12 $** |
+| Tokens | 5 548 |
+
+Le passage du séquentiel au concurrent a fait apparaître six erreurs 429 là où
+il n'y en avait jamais eu — toutes absorbées par le retry, aucune réponse
+perdue. Enseignement : **un sémaphore limite la concurrence, pas le débit.**
+`Semaphore(3)` avec des réponses en 2 s envoie jusqu'à 90 requêtes par minute,
+ce qu'un quota exprimé en requêtes/minute n'autorise pas. Respecter un quota de
+débit demande un rate limiter (token bucket) ; les deux contraintes sont
+distinctes et coexistent en production.
+
 ### Tests
 
 19 tests, exécutés en **0,26 s**, sans accès réseau et sans clé d'API valide.
@@ -384,8 +445,11 @@ llm-harness/
 ├── rag.py                # pipeline RAG, assertions, juge, calibration
 ├── main.py               # script de démonstration
 ├── test_llm_client.py    # suite de tests
+├── models.py             # identifiants des modèles (clé du cache CI)
 ├── eval_set.json         # jeu d'évaluation (versionné)
-├── labels_humains.json   # annotations manuelles de référence (versionné)
+├── v1_labels.json        # annotations manuelles de référence (versionné)
+├── .github/workflows/ci.yml
+├── pytest.ini
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore

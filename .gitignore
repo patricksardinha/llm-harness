@@ -9,8 +9,8 @@ venv/
 env/
 ENV/
 
-# Results
-results.json
+# Datas
+data/
 
 # Distribution / packaging
 build/
